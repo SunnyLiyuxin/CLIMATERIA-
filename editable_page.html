@@ -1286,6 +1286,12 @@
         }
         .family-tag:hover { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.65); color:#fff; }
         .family-tag .tag-dot { width:8px; height:8px; border-radius:50%; box-shadow:0 0 6px currentColor; flex-shrink:0; }
+        /* 家族标签自创简笔画图标 */
+        .family-tag .tag-icon { width:16px; height:16px; flex-shrink:0; }
+        .family-tag .tag-icon path,
+        .family-tag .tag-icon circle,
+        .family-tag .tag-icon line,
+        .family-tag .tag-icon polyline { stroke: currentColor; stroke-width:1.6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
         .overview-right {
             color:#d4af37; font-size:13px; letter-spacing:2px; flex-shrink:0; min-width:150px; text-align:right;
             transition: color 0.3s ease;
@@ -2148,12 +2154,13 @@
             const fLabel = svgText(fam.emoji+' '+fam.family, trunkX, trunkY-30, fam.color, 13, 'middle');
             g.appendChild(fLabel);
 
-            // 成员分脉 + 星辰之果节点：成员在家族主节点下方纵向展开（紧凑、不横向溢出）
+            // 成员分脉 + 星辰之果节点：成员在家族主节点下方纵向展开
             const n = fam.members.length;
-            const branchStartY = trunkY + 36;
-            const memberGap = Math.min(46, (PED_H - branchStartY - 80) / Math.max(n, 1));
+            const branchStartY = trunkY + 40;
+            // 光晕外层半径 32，需间距 >64 才不重叠；取 72 留足间隙
+            const memberGap = Math.min(72, (PED_H - branchStartY - 90) / Math.max(n, 1));
             fam.members.forEach((ch, j) => {
-                const mx = trunkX + (j - (n-1)/2) * 26;   // 轻微横向错落，避免完全垂直呆板
+                const mx = trunkX + (j - (n-1)/2) * 22;   // 轻微横向错落，避免完全垂直呆板
                 const my = branchStartY + j * memberGap;
                 // 分脉（自然弯曲如藤蔓，从主节点向下延伸）
                 const bcp1x = trunkX + (mx-trunkX)*0.2, bcp1y = trunkY + (my-trunkY)*0.5;
@@ -2178,14 +2185,14 @@
                 bp.addEventListener('mouseenter', ()=> bnote.classList.add('show'));
                 bp.addEventListener('mouseleave', ()=> bnote.classList.remove('show'));
 
-                // 角色节点（星辰之果）：外晕 + 内晕(呼吸) + 核心
+                // 角色节点（星辰之果）：外晕 + 内晕(呼吸) + 核心（光晕缩小，避免相邻节点重叠）
                 const ng = svgEl('g'); ng.setAttribute('class','pnode-char'); ng.style.cursor='pointer';
                 const outer = svgEl('circle');
-                outer.setAttribute('cx',mx); outer.setAttribute('cy',my); outer.setAttribute('r',50);
+                outer.setAttribute('cx',mx); outer.setAttribute('cy',my); outer.setAttribute('r',32);
                 outer.setAttribute('fill', fam.color); outer.setAttribute('opacity','0.06');
                 outer.setAttribute('class','pnode-glow-outer');
                 const inner = svgEl('circle');
-                inner.setAttribute('cx',mx); inner.setAttribute('cy',my); inner.setAttribute('r',30);
+                inner.setAttribute('cx',mx); inner.setAttribute('cy',my); inner.setAttribute('r',18);
                 inner.setAttribute('fill', fam.color); inner.setAttribute('opacity','0.2');
                 inner.setAttribute('class','pnode-glow-inner');
                 // 每颗节点独立呼吸节奏（不同步，像星空而非灯阵）
@@ -2209,12 +2216,12 @@
 
                 // 交互：悬停角色（节点光晕扩大 + 卷轴显示角色信息）
                 ng.addEventListener('mouseenter', ()=> {
-                    inner.setAttribute('r', 50);
+                    inner.setAttribute('r', 40);
                     updatePedigreeScrollChar(ch);
                     document.getElementById('overviewRight').textContent = ch.family + ' · ' + ch.name;
                 });
                 ng.addEventListener('mouseleave', ()=> {
-                    inner.setAttribute('r', 30);
+                    inner.setAttribute('r', 18);
                     if (focusedFamily){ updatePedigreeScrollFamily(focusedFamily); document.getElementById('overviewRight').textContent = focusedFamily.family; }
                     else { document.getElementById('overviewRight').textContent = '— 凝望整棵世界树 —'; }
                 });
@@ -2283,13 +2290,27 @@
     }
 
     /* ===== 顶部家族标签按钮 ===== */
+    // 家族自创简笔画图标（24x24 viewBox，单色描边线条，非现成 emoji）
+    const familyIcons = {
+        '雨林家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 21 C12 16 8 12 4 11 C5 15 7 18 12 21Z"/><path d="M12 21 C12 16 16 12 20 11 C19 15 17 18 12 21Z"/><line x1="12" y1="21" x2="12" y2="9"/><path d="M12 9 C10 6 8 5 6 5 C7 7 9 8 12 9Z"/><path d="M12 9 C14 6 16 5 18 5 C17 7 15 8 12 9Z"/></svg>',
+        '季风家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 9 C6 6 9 6 12 9 C15 12 18 12 21 9"/><path d="M3 14 C6 11 9 11 12 14 C15 17 18 17 21 14"/><path d="M3 19 C6 16 9 16 12 19"/></svg>',
+        '草原家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 21 L12 8"/><path d="M12 8 C10 6 8 6 7 7 C8 8 10 9 12 9"/><path d="M12 9 C14 7 16 7 17 8 C16 9 14 10 12 10"/><path d="M12 12 C10 10 8 10 7 11 C8 12 10 13 12 13"/><path d="M12 13 C14 11 16 11 17 12 C16 13 14 14 12 14"/></svg>',
+        '干旱家': '<svg class="tag-icon" viewBox="0 0 24 24"><circle cx="18" cy="6" r="2.5"/><path d="M3 18 C6 14 9 14 12 18 C15 22 18 22 21 18"/></svg>',
+        '西风家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 7 C7 7 9 7 12 7 C14 7 15 5 13 4"/><path d="M3 12 C8 12 11 12 14 12 C16 12 17 10 15 9"/><path d="M3 17 C7 17 10 17 13 17 C15 17 16 15 14 14"/></svg>',
+        '大陆家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 18 L8 9 L12 14 L16 7 L21 18 Z"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+        '寒冰家': '<svg class="tag-icon" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="7.5" x2="20" y2="16.5"/><line x1="4" y1="16.5" x2="20" y2="7.5"/><path d="M12 3 L10 5 M12 3 L14 5"/><path d="M12 21 L10 19 M12 21 L14 19"/></svg>',
+        '高山家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 19 L9 7 L13 13 L16 9 L21 19 Z"/><path d="M7 11 L9 7 L11 11"/></svg>',
+        '孤独者': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 4 L13.5 10 L20 11 L13.5 12 L12 18 L10.5 12 L4 11 L10.5 10 Z"/></svg>'
+    };
     function buildFamilyTags(families){
         const box = document.getElementById('familyTags');
         box.innerHTML = '';
         families.forEach(fam => {
             const b = document.createElement('button');
             b.className = 'family-tag';
-            b.innerHTML = `<span class="tag-dot" style="background:${fam.color};color:${fam.color};"></span>${fam.emoji} ${fam.family}`;
+            b.style.color = fam.color;
+            const icon = familyIcons[fam.family] || '';
+            b.innerHTML = `${icon}<span style="color:#e8dcc8;">${fam.family}</span>`;
             b.addEventListener('mouseenter', ()=> { if (!focusedFamily) hoverFamily(fam); });
             b.addEventListener('mouseleave', ()=> { if (!focusedFamily) unhoverFamily(); });
             b.addEventListener('click', ()=> focusFamily(fam));
