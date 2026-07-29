@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLIMATERIA · 气候万象志</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        /* ===== 全局变量与重置 ===== */
+        :root {
+            --font-cn: 'FZKaiTi', '方正楷体', 'KaiTi', 'STKaiti', '华文楷体', '楷体', 'Kaiti SC', 'SimSun', serif;
+            --font-en: 'Goudy Old Style', 'ZCOOL XiaoWei', 'Georgia', serif;
+            --gold: #d4af37;
+            --gold-bright: #f0d060;
+            --gold-deep: #b8942a;
+            --ink-deep: #0a1128;
+            --ink-mid: #1a3a5c;
+            --paper-warm: #f0ece0;
+            --paper-cool: #e8dcc8;
+            --seal-red: #b53a2a;
+            --seal-red-deep: #8b3a2a;
+            --parchment-text: #1a1208;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-cn);
+        }
+
+        body {
+            font-family: var(--font-cn);
+            overflow: hidden;
+            background: var(--ink-deep);
+            color: var(--paper-warm);
+        }
+
+        /* ===== 首页蒙版层 ===== */
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a3a5c 0%, #0a1128 50%, #1a3a5c 100%);
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 1.6s ease-out;
+        }
+        #overlay.fade-out { opacity: 0; pointer-events: none; }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
+            animation: ripple-fade 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes ripple-fade {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+        .star-point {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: #f0d060;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #f0d060, 0 0 40px #d4af37;
+            animation: star-pulse 3s ease-in-out infinite;
+        }
+        @keyframes star-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        /* ===== 首页金色氛围动效（极淡 · 极慢 · 隐约） ===== */
+        /* 1. 金色涟漪 —— 同心圆环在四周向外扩散 */
+        .ambient-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 18px rgba(212, 175, 55, 0.15) inset;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.2);
+            filter: blur(0.8px);
+        }
+        .ambient-ripple.r1 { top: 18%; left: 12%; animation: ambientRippleSpread 7s ease-out 0s infinite; }
+        .ambient-ripple.r2 { top: 78%; left: 22%; animation: ambientRippleSpread 8s ease-out 3s infinite; }
+        .ambient-ripple.r3 { top: 22%; left: 82%; animation: ambientRippleSpread 6.5s ease-out 1.5s infinite; }
+        .ambient-ripple.r4 { top: 82%; left: 88%; animation: ambientRippleSpread 7.5s ease-out 4.5s infinite; }
+        @keyframes ambientRippleSpread {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); border-color: rgba(212, 175, 55, 0.3); }
+            15%  { opacity: 0.5; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(4.5); border-color: rgba(212, 175, 55, 0); }
+        }
+
+        /* 2. 海浪金边 —— 底部极细金色波浪线从左向右缓慢流动 */
+        .ambient-wave {
+            position: absolute;
+            left: 0; bottom: 0;
+            width: 100%; height: 24px;
+            pointer-events: none;
+            opacity: 0.6;
+            background-repeat: repeat-x;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='24' viewBox='0 0 160 24'><path d='M0,12 Q40,4 80,12 T160,12' fill='none' stroke='%23d4af37' stroke-width='1' stroke-opacity='0.2'/></svg>");
+            background-size: 160px 24px;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+            animation: ambientWaveFlow 16s linear infinite;
+        }
+        @keyframes ambientWaveFlow {
+            0%   { background-position-x: 0px; }
+            100% { background-position-x: 160px; }
+        }
+
+        /* 3. 呼啸的风 —— 左上至右下的金色细线 + 金尘粒子 */
+        .ambient-wind-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .wind-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.35), transparent);
+            transform-origin: left center;
+            opacity: 0;
+            filter: blur(0.3px);
+        }
+        .wind-line.w1 { top: 12%; left: -15%; width: 55%; transform: rotate(18deg); animation: windBlow 17s linear 0s infinite; }
+        .wind-line.w2 { top: 28%; left: -20%; width: 65%; transform: rotate(16deg); animation: windBlow 19s linear 2.5s infinite; }
+        .wind-line.w3 { top: 45%; left: -18%; width: 50%; transform: rotate(20deg); animation: windBlow 18s linear 5s infinite; }
+        .wind-line.w4 { top: 62%; left: -22%; width: 60%; transform: rotate(15deg); animation: windBlow 20s linear 7s infinite; }
+        .wind-line.w5 { top: 76%; left: -16%; width: 52%; transform: rotate(17deg); animation: windBlow 16s linear 9.5s infinite; }
+        @keyframes windBlow {
+            0%   { opacity: 0; transform: translateX(0) rotate(18deg); }
+            20%  { opacity: 0.5; }
+            80%  { opacity: 0.4; }
+            100% { opacity: 0; transform: translateX(130%) rotate(18deg); }
+        }
+        .gold-dust {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: #d4af37;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(212, 175, 55, 0.6);
+            opacity: 0;
+        }
+        .gold-dust.d1 { top: 20%; left: 10%; animation: dustDrift 22s linear 0s infinite; }
+        .gold-dust.d2 { top: 35%; left: 30%; animation: dustDrift 26s linear 3s infinite; }
+        .gold-dust.d3 { top: 55%; left: 15%; animation: dustDrift 24s linear 6s infinite; }
+        .gold-dust.d4 { top: 70%; left: 40%; animation: dustDrift 28s linear 9s infinite; }
+        .gold-dust.d5 { top: 25%; left: 60%; animation: dustDrift 23s linear 12s infinite; }
+        .gold-dust.d6 { top: 80%; left: 70%; animation: dustDrift 27s linear 1.5s infinite; }
+        .gold-dust.d7 { top: 50%; left: 75%; animation: dustDrift 25s linear 4.5s infinite; }
+        @keyframes dustDrift {
+            0%   { opacity: 0; transform: translate(0, 0); }
+            15%  { opacity: 0.6; }
+            85%  { opacity: 0.5; }
+            100% { opacity: 0; transform: translate(40vw, 25vh); }
+        }
+
+        #poetry {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; z-index: 101; opacity: 0;
+        }
+        #poetry.show { animation: poetry-appear 12s ease-in-out forwards; }
+        @keyframes poetry-appear {
+            0% { opacity: 0; } 5% { opacity: 0; } 8% { opacity: 1; }
+            82% { opacity: 1; } 100% { opacity: 0; }
+        }
+        .poetry-line {
+            font-size: 28px;
+            color: #FFF8E7;
+            margin: 24px 0;
+            opacity: 0;
+            text-shadow: 0 0 10px rgba(240, 208, 96, 0.5);
+            font-family: var(--font-cn);
+            font-weight: 400;
+            letter-spacing: 6px;
+            white-space: nowrap;
+            display: block;
+        }
+        .poetry-line:nth-child(1) { animation: line-appear 1.2s ease-out 2.0s forwards; }
+        .poetry-line:nth-child(2) { animation: line-appear 1.2s ease-out 5.0s forwards; }
+        .poetry-line:nth-child(3) { animation: line-appear 1.2s ease-out 8.0s forwards; }
+        @keyframes line-appear { to { opacity: 1; } }
+
+        /* ===== 首页背景图 ===== */
+        #landing-page {
+            position: fixed; inset: 0;
+            background: url('首页背景底图.png') center center / contain no-repeat;
+            z-index: 1; opacity: 0;
+            transition: opacity 1.6s ease-out;
+        }
+        #landing-page.show { opacity: 1; }
+        #landing-page.hide { opacity: 0; pointer-events: none; }
+
+        /* ===== 涟漪按钮 ===== */
+        #start-button-container {
+            position: fixed; top: 65%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10; opacity: 0; pointer-events: none;
+            transition: opacity 1s ease-out;
+        }
+        #start-button-container.show { opacity: 1; pointer-events: auto; }
+
+        .start-button {
+            position: relative; background: transparent;
+            border: none; cursor: pointer;
+            padding: 40px 60px; text-align: center; outline: none;
+        }
+        .start-button::before, .start-button::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            animation: button-ripple 3.2s ease-out infinite;
+            pointer-events: none;
+        }
+        .start-button::before { width: 100px; height: 100px; animation-delay: 0s; }
+        .start-button::after { width: 100px; height: 100px; animation-delay: 0.8s; }
+        .ripple-layer-3, .ripple-layer-4 {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            animation: button-ripple 3.2s ease-out infinite;
+            pointer-events: none;
+        }
+        .ripple-layer-3 { width: 100px; height: 100px; animation-delay: 1.6s; }
+        .ripple-layer-4 { width: 100px; height: 100px; animation-delay: 2.4s; }
+        @keyframes button-ripple {
+            0% { width: 100px; height: 100px; opacity: 0.8; }
+            100% { width: 300px; height: 300px; opacity: 0; }
+        }
+        .start-button:hover .ripple-layer-3, .start-button:hover .ripple-layer-4,
+        .start-button:hover::before, .start-button:hover::after {
+            animation-duration: 2s;
+        }
+        .start-button:hover .main-text {
+            text-shadow: 0 0 30px rgba(240, 208, 96, 0.9), 0 0 50px rgba(212, 175, 55, 0.6);
+            filter: brightness(1.2);
+        }
+        .main-text {
+            font-size: 42px;
+            font-family: var(--font-cn);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff8e7 0%, #ffeec2 40%, #f0d060 70%, #fff8e7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 16px rgba(255, 248, 231, 0.7)) drop-shadow(0 0 32px rgba(240, 208, 96, 0.4));
+            margin-bottom: 10px;
+            letter-spacing: 12px;
+            transition: all 0.3s ease;
+        }
+        .sub-text {
+            font-size: 13px;
+            font-family: var(--font-en);
+            font-weight: 700;
+            color: rgba(255, 248, 231, 0.75);
+            letter-spacing: 4px;
+            animation: breathe 2s ease-in-out infinite;
+            text-shadow: 0 0 12px rgba(240, 208, 96, 0.35);
+        }
+        @keyframes breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        .start-button.clicked .main-text,
+        .start-button.clicked .sub-text,
+        .start-button.clicked .ripple-layer-3,
+        .start-button.clicked .ripple-layer-4 {
+            animation: ink-fade 1.2s ease-out forwards;
+        }
+        .start-button.clicked::before, .start-button.clicked::after {
+            animation: ink-fade 1.2s ease-out forwards;
+        }
+        @keyframes ink-fade { to { opacity: 0; transform: scale(1.1); } }
+
+        /* ===== 主页面 ===== */
+        #main-page {
+            position: fixed; inset: 0;
+            z-index: 50; opacity: 0; pointer-events: none;
+            transition: opacity 1.2s ease-out;
+            background: var(--ink-deep);
+            display: flex;
+            flex-direction: column;
+        }
+        #main-page.show { opacity: 1; pointer-events: auto; }
+
+        /* ===== 顶部导航 ===== */
+        .navbar {
+            position: relative;
+            width: 100%; height: 64px;
+            background: rgba(10, 17, 40, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px;
+            border-bottom: 1px solid transparent;
+            border-image: linear-gradient(90deg, transparent, #d4af37, #f0d060, #d4af37, transparent) 1;
+            flex-shrink: 0;
+        }
+        .nav-title {
+            font-size: 22px;
+            color: #FFF8E7;
+            text-shadow: 0 0 15px rgba(240, 208, 96, 0.5);
+            font-weight: 700;
+            letter-spacing: 4px;
+            display: flex; align-items: baseline;
+        }
+        .nav-title .en-text {
+            font-family: var(--font-en);
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+        .nav-title .cn-text {
+            font-family: var(--font-cn);
+            font-weight: 700;
+        }
+        .nav-buttons { display: flex; gap: 30px; }
+        .nav-btn {
+            background: transparent; border: none;
+            color: #888;
+            font-size: 16px;
+            font-family: var(--font-cn);
+            font-weight: 400;
+            cursor: pointer;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            letter-spacing: 4px;
+        }
+        .nav-btn.active {
+            color: #d4af37;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+        }
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 80%; height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+        .nav-btn:hover {
+            color: #f0d060;
+            text-shadow: 0 0 15px rgba(240, 208, 96, 0.8);
+        }
+
+        /* ===== 地图区域（世界气候地图） ===== */
+        .map-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            overflow: visible;
+            background: var(--ink-deep);
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            z-index: 91;
+        }
+        .map-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            padding: 0 4px;
+        }
+
+        /* 27个交互圆点 */
+        #dots-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .dot {
+            position: absolute;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            color: #fff;
+            /* 磨砂琉璃：将原色提亮为更浅更亮的基底 */
+            filter: saturate(1.6) brightness(1.35) contrast(0.95);
+        }
+        .dot::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            opacity: 0.45;
+            animation: dot-pulse 3s ease-in-out infinite;
+            filter: blur(0.5px);
+        }
+        .dot::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            /* 渐变琉璃：中心高光提亮 + 边缘原色，模拟琉璃球的光泽 */
+            background:
+                radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.15) 22%, currentColor 70%);
+            box-shadow: 0 0 12px currentColor, 0 0 24px currentColor, inset 0 0 4px rgba(255,255,255,0.4);
+            animation: dot-breathe 2.4s ease-in-out infinite;
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(1px);
+        }
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.45; }
+            50% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes dot-breathe {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        .dot:hover, .dot.active {
+            transform: translate(-50%, -50%) scale(1.4);
+            z-index: 20;
+            filter: saturate(1.8) brightness(1.55) contrast(0.95);
+        }
+        .dot:hover::after, .dot.active::after {
+            box-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor, inset 0 0 6px rgba(255,255,255,0.6);
+            opacity: 1;
+        }
+
+        /* ===== 底部卷轴（牛皮纸） ===== */
+        .scroll-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            flex-shrink: 0;
+            background: url('底部牛皮纸（新）.jpg') center center / 100% 100% no-repeat;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        /* 牛皮纸上的暗角与质感 */
+        .scroll-container::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at center, transparent 60%, rgba(20, 10, 5, 0.15) 100%),
+                linear-gradient(180deg, rgba(40, 25, 10, 0.05) 0%, transparent 30%, transparent 70%, rgba(40, 25, 10, 0.08) 100%);
+            pointer-events: none;
+        }
+        /* 四纵列透明容器，浮于牛皮纸之上，介于地图与牛皮纸下底之间 */
+        .scroll-content {
+            position: absolute;
+            z-index: 2;
+            top: 8px;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding: 0 2%;
+            font-family: var(--font-cn);
+            transition: opacity 0.3s ease-out;
+            pointer-events: none;
+        }
+        .scroll-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px 12px;
+        }
+        .scroll-col-row {
+            font-family: var(--font-cn);
+            font-weight: 700;
+            color: #3d1f08;
+            text-shadow: 0 1px 0 rgba(255, 245, 230, 0.4), 0 0 8px rgba(212, 175, 55, 0.15);
+            letter-spacing: 2px;
+        }
+        .scroll-col:nth-child(2) {
+            margin-left: 10%;
+        }
+        .scroll-col-name {
+            font-size: 24px;
+            line-height: 1.4;
+        }
+        .scroll-col-motto {
+            font-size: 19px;
+            font-style: italic;
+            line-height: 1.5;
+            padding: 0 6px;
+        }
+        .scroll-col-region {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .scroll-col-hint {
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        .scroll-divider {
+            width: 1px;
+            height: 70%;
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(212, 175, 55, 0.1) 15%, 
+                rgba(240, 208, 96, 0.35) 30%,
+                rgba(240, 208, 96, 0.5) 50%,
+                rgba(240, 208, 96, 0.35) 70%,
+                rgba(212, 175, 55, 0.1) 85%,
+                transparent 100%
+            );
+            box-shadow: 0 0 4px rgba(240, 208, 96, 0.25);
+            flex-shrink: 0;
+        }
+
+        /* ===== 详情遮罩 ===== */
+        .detail-overlay {
+            position: fixed; inset: 0;
+            background: rgba(14, 26, 43, 0.65);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .detail-overlay.show { opacity: 1; pointer-events: auto; }
+
+        /* ===== 详情卡片（羊皮纸 · 经折装古籍） ===== */
+        .detail-card {
+            position: fixed;
+            top: 40px;
+            bottom: 40px;
+            right: 12px;
+            width: calc(70vw - 12px);
+            max-width: 760px;
+            z-index: 201;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 44px 48px 60px 54px;
+            /* 羊皮纸底图 + 烛光暖调叠加 */
+            background-image:
+                radial-gradient(ellipse at 80% 0%, rgba(255, 200, 120, 0.22), transparent 55%),
+                radial-gradient(ellipse at 20% 100%, rgba(120, 80, 30, 0.18), transparent 60%),
+                url('人物详情页底图.png');
+            background-size: cover, cover, cover;
+            background-position: center, center, center;
+            background-repeat: no-repeat;
+            /* 左侧白金贴边 + 星光 */
+            border-left: 3px solid #f5f0d8;
+            box-shadow:
+                -10px 0 50px rgba(0, 0, 0, 0.5),
+                inset 0 0 120px rgba(120, 80, 30, 0.12),
+                -1px 0 10px rgba(245, 240, 216, 0.7),
+                -3px 0 20px rgba(245, 240, 216, 0.3);
+            /* 滑入前隐藏（右移 80px） */
+            transform: translateX(80px);
+            opacity: 0;
+            pointer-events: none;
+            transition:
+                transform 0.6s cubic-bezier(0.34, 1.2, 0.64, 1),
+                opacity 0.6s ease 0.1s;
+        }
+        .detail-card.show {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        /* 纸张磨损/纤维纹理叠加 */
+        .detail-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(184, 148, 42, 0.035) 3px,
+                    rgba(184, 148, 42, 0.035) 6px
+                ),
+                radial-gradient(ellipse at top right, rgba(180, 130, 50, 0.1), transparent 60%),
+                radial-gradient(ellipse at bottom left, rgba(120, 80, 30, 0.08), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        /* 纸张边缘磨损痕迹 */
+        .detail-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            box-shadow:
+                inset 0 2px 6px rgba(120, 80, 30, 0.25),
+                inset 0 -2px 6px rgba(120, 80, 30, 0.25),
+                inset 2px 0 4px rgba(120, 80, 30, 0.2);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .detail-card > * { position: relative; z-index: 1; }
+
+        /* 滚动条样式 —— 右侧金色 + 隐藏（悬停浮现） */
+        .detail-card {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
+        }
+        .detail-card::-webkit-scrollbar { width: 4px; }
+        .detail-card::-webkit-scrollbar-track { background: transparent; }
+        .detail-card::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.3);
+            border-radius: 2px;
+        }
+        .detail-card::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.5); }
+        /* 默认隐藏，悬停时浮现 */
+        .detail-card:not(:hover)::-webkit-scrollbar-thumb { background: transparent; }
+
+        /* 详情内容整体浅色底 —— 让文字“长”在提亮的纸张上 */
+        /* ===== 左图右史布局 ===== */
+        .detail-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        /* 左侧画像区 35% */
+        .portrait-section {
+            width: 35%;
+            height: 100%;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 1px solid rgba(212, 175, 55, 0.3);
+            box-sizing: border-box;
+        }
+        /* 画像框 —— 去掉金箔边框，覆盖左侧 90% 区域 */
+        .portrait-frame {
+            width: 90%;
+            aspect-ratio: 3 / 4;
+            max-height: 95%;
+            padding: 0;
+            background: none;
+            box-shadow: none;
+            position: relative;
+            transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+            box-sizing: border-box;
+            border: none;
+            cursor: zoom-in;
+        }
+        /* 画像本身 —— 轮廓发出微微阴影的金光，悬停微微放大 */
+        .portrait-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #f2ece0;
+            display: block;
+            transition: opacity 0.4s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+        .portrait-frame:hover { transform: scale(1.04); }
+        .portrait-frame:hover .portrait-image {
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.55);
+        }
+        .portrait-image.fade-out { opacity: 0; }
+        .portrait-image.reveal {
+            animation: reveal-portrait 0.6s ease-out;
+        }
+        @keyframes reveal-portrait {
+            0% { clip-path: circle(0% at center); opacity: 0; }
+            100% { clip-path: circle(75% at center); opacity: 1; }
+        }
+        /* 底部投影 */
+        .portrait-frame::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 10%;
+            width: 80%;
+            height: 10px;
+            background: radial-gradient(ellipse, rgba(26,26,26,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        /* 加载光晕 */
+        .portrait-loading {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(212,175,55,0.12), transparent 70%);
+            animation: pulse-gold 1.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .portrait-loading.hidden { display: none; }
+        @keyframes pulse-gold {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.05); }
+        }
+        /* 长按金色涟漪 */
+        .ripple-effect {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.6);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: ripple-spread 1.2s ease-out forwards;
+            z-index: 10;
+        }
+        @keyframes ripple-spread {
+            0% { width: 20px; height: 20px; opacity: 0.8; border-width: 2px; }
+            100% { width: 400px; height: 400px; opacity: 0; border-width: 0.5px; }
+        }
+
+        /* ===== 画像放大查看层 —— 跳出牛皮纸，全页面左侧 9:16 完整呈现 ===== */
+        .portrait-fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .portrait-fullscreen.show {
+            pointer-events: auto;
+            opacity: 1;
+        }
+        /* 图片容器 —— 左侧定位，9:16，顶底留空隙 */
+        .portrait-fullscreen-wrap {
+            position: absolute;
+            left: 24px;
+            top: 24px;
+            bottom: 24px;
+            aspect-ratio: 9 / 16;
+            height: calc(100vh - 48px);
+            transform: translateX(-40px) scale(0.92);
+            transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+            cursor: zoom-out;
+            /* 右侧微微越过牛皮纸左边缘（由 9:16 宽度自然形成） */
+        }
+        .portrait-fullscreen.show .portrait-fullscreen-wrap {
+            transform: translateX(0) scale(1);
+        }
+        /* 图片本身 —— 整体金光 + 右侧深阴影（仿照映射在牛皮纸上的影子） */
+        .portrait-fullscreen-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #f2ece0;
+            box-shadow:
+                0 0 24px rgba(212, 175, 55, 0.45),            /* 整体轮廓金光 */
+                0 0 50px rgba(212, 175, 55, 0.2),
+                14px 0 32px rgba(40, 25, 10, 0.45),            /* 右侧深阴影勾勒 */
+                6px 0 14px rgba(40, 25, 10, 0.35),
+                0 8px 40px rgba(0, 0, 0, 0.35);                /* 底部落地阴影 */
+        }
+        /* 关闭提示 */
+        .portrait-fullscreen-hint {
+            position: absolute;
+            left: 24px;
+            bottom: 4px;
+            transform: translateX(calc((100vh - 48px) * 9 / 16));
+            padding-left: 16px;
+            color: rgba(245, 240, 216, 0.7);
+            font-size: 13px;
+            letter-spacing: 3px;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.3s;
+            text-shadow: 0 0 8px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .portrait-fullscreen.show .portrait-fullscreen-hint { opacity: 1; }
+        #detailContent {
+            flex: 1;
+            width: 65%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden; /* 去掉底部滑轮 */
+            padding: 40px 40px 40px 32px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
+        }
+        /* 右侧滚动条 —— 金色 + 隐藏（悬停浮现） */
+        #detailContent::-webkit-scrollbar { width: 4px; }
+        #detailContent::-webkit-scrollbar-track { background: transparent; }
+        #detailContent::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.3);
+            border-radius: 2px;
+        }
+        #detailContent::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.5); }
+        #detailContent:not(:hover)::-webkit-scrollbar-thumb { background: transparent; }
+        #detailContent::before {
+            content: '';
+            position: absolute;
+            inset: -8px -16px -24px -16px;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(255, 250, 235, 0.22) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(255, 248, 230, 0.18) 0%, transparent 65%),
+                linear-gradient(180deg, rgba(255, 250, 235, 0.10) 0%, rgba(255, 248, 230, 0.08) 100%);
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #detailContent > * { position: relative; z-index: 1; }
+
+        /* ===== 第一折 · 灵性 ===== */
+        .detail-fold {
+            margin-bottom: 30px;
+            padding-bottom: 22px;
+            border-bottom: 1px dashed rgba(60, 40, 20, 0.3);
+            /* 初始隐藏，待 .show 触发翻起动画 */
+            opacity: 0;
+            transform: translateY(24px);
+            transition:
+                opacity 0.25s ease,
+                transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .detail-fold:last-child { border-bottom: none; }
+        .detail-fold.fold-1 { transition-delay: 0.1s; }
+        .detail-fold.fold-2 { transition-delay: 0.25s; }
+        .detail-fold.fold-3 { transition-delay: 0.4s; }
+        .detail-fold.fold-4 { transition-delay: 0.55s; }
+        .detail-card.show .detail-fold {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 折页标题（卷草纹装饰线）—— 加粗放大 · 极深墨 */
+        .fold-title {
+            font-size: 24px;
+            color: #0a0a0a;
+            margin-bottom: 18px;
+            font-family: var(--font-cn);
+            font-weight: 900;
+            letter-spacing: 8px;
+            display: flex; align-items: center; gap: 12px;
+            position: relative;
+            text-shadow: 0 0 16px rgba(0,0,0,0.06);
+        }
+        .fold-title::before {
+            content: '';
+            display: inline-block;
+            width: 5px; height: 24px;
+            background: linear-gradient(to bottom, #d4af37, #f0d060, #d4af37);
+            border-radius: 2px;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+        /* 卷草纹装饰线 —— 悬停金色光泽流动（3s 循环） */
+        .gold-sheen-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(212, 175, 55, 0.5) 50%,
+                transparent 100%
+            );
+            position: relative;
+            overflow: hidden;
+        }
+        .gold-sheen-line::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -50%;
+            width: 50%; height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(240, 208, 96, 0.9),
+                transparent
+            );
+            transform: translateX(0);
+        }
+        .detail-fold:hover .gold-sheen-line::after {
+            animation: goldSheenFlow 3s linear infinite;
+        }
+        @keyframes goldSheenFlow {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+
+        /* 角色名（尤为大 · 行书 60px · 极深墨色 + 极淡黑色光晕，如刻入纸张） */
+        .char-name-gold {
+            font-size: 60px;
+            color: #0a0a0a;
+            font-family: 'Ma Shan Zheng', var(--font-cn);
+            font-weight: 700;
+            letter-spacing: 12px;
+            line-height: 1.15;
+            text-shadow: 0 0 20px rgba(0,0,0,0.06);
+            margin-bottom: 12px;
+        }
+        /* 英文名 · 气候类型 —— 极深墨（与角色名同色） */
+        .char-en-climate {
+            font-size: 19px;
+            color: #0a0a0a;
+            font-family: var(--font-en), var(--font-cn);
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-style: italic;
+            text-shadow: 0 0 8px rgba(0,0,0,0.05);
+        }
+        .char-en-climate .en-name {
+            font-weight: 900;
+            color: #0a0a0a;
+        }
+        /* 自述灵言（楷体 斜体 24px · 极深墨 + 极淡黑色光晕） */
+        .char-lingyan {
+            font-size: 24px;
+            color: #0a0a0a;
+            font-family: var(--font-cn);
+            font-style: italic;
+            font-weight: 500;
+            line-height: 1.85;
+            letter-spacing: 2px;
+            padding: 14px 18px 14px 20px;
+            border-left: 3px solid #f5f0d8;
+            margin-bottom: 18px;
+            text-shadow: 0 0 12px rgba(0,0,0,0.04);
+            position: relative;
+            box-shadow: -1px 0 8px rgba(245, 240, 216, 0.6), -2px 0 16px rgba(245, 240, 216, 0.25);
+            animation: starShimmer 4s ease-in-out infinite;
+        }
+        @keyframes starShimmer {
+            0%, 100% { box-shadow: -1px 0 8px rgba(245, 240, 216, 0.5), -2px 0 16px rgba(245, 240, 216, 0.2); }
+            50%      { box-shadow: -1px 0 12px rgba(255, 250, 220, 0.85), -2px 0 24px rgba(255, 248, 200, 0.45); }
+        }
+        .char-lingyan::before {
+            content: '';
+            position: absolute;
+            inset: -6px -10px;
+            background: radial-gradient(ellipse, rgba(255,248,240,0.18) 0%, transparent 70%);
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        /* 性格关键词（圆点分隔）—— 极深墨 + 金色圆点 */
+        .char-personality {
+            font-size: 19px;
+            color: #0a0a0a;
+            font-family: var(--font-cn);
+            letter-spacing: 2px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0,0,0,0.03);
+        }
+        .char-personality .kw {
+            color: #0a0a0a;
+            font-weight: 900;
+        }
+        .char-personality .dot-sep {
+            color: #d4af37;
+            margin: 0 10px;
+            font-size: 10px;
+            text-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+
+        /* ===== 第二折 · 灵力 ===== */
+        .fold-content {
+            font-size: 19px;
+            color: #0a0a0a;
+            line-height: 2;
+            font-family: var(--font-cn);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+        .fold-row {
+            margin-bottom: 14px;
+        }
+        .fold-label {
+            display: inline-block;
+            font-size: 18px;
+            color: #0a0a0a;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-right: 10px;
+            text-shadow: 0 0 6px rgba(0,0,0,0.05);
+        }
+        .fold-label::before { content: '◆ '; color: #d4af37; font-size: 12px; text-shadow: 0 0 8px rgba(212,175,55,0.4); }
+        .fold-value {
+            color: #0a0a0a;
+            font-size: 19px;
+        }
+        /* 灵力名称 —— 极深墨（放大到 26px） */
+        .power-name {
+            font-size: 26px;
+            color: #0a0a0a;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-shadow: 0 0 16px rgba(0,0,0,0.06);
+            font-family: 'Ma Shan Zheng', var(--font-cn);
+        }
+        /* 地理对应 —— 古籍批注风，左侧白金线 + 星光 */
+        .geo-correspond {
+            padding: 14px 16px 14px 18px;
+            background: rgba(255, 248, 240, 0.12);
+            border-left: 2px solid #f5f0d8;
+            border-radius: 2px;
+            font-size: 18px;
+            color: #0a0a0a;
+            line-height: 1.9;
+            margin: 10px 0;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+            position: relative;
+            box-shadow: -1px 0 8px rgba(245, 240, 216, 0.6), -2px 0 16px rgba(245, 240, 216, 0.25);
+            animation: starShimmer 4s ease-in-out infinite;
+        }
+        .geo-correspond::before {
+            content: '';
+            position: absolute;
+            inset: -4px -8px;
+            background: radial-gradient(ellipse, rgba(255,248,240,0.15) 0%, transparent 70%);
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        /* 意象元素（圆点分隔） */
+        .imagery-line {
+            font-size: 19px;
+            color: #0a0a0a;
+            letter-spacing: 1px;
+            line-height: 2;
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+        .imagery-line .img-item {
+            color: #0a0a0a;
+        }
+        .imagery-line .img-dot {
+            color: #d4af37;
+            margin: 0 10px;
+            font-size: 10px;
+            text-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+
+        /* ===== 第三折 · 血脉 ===== */
+        .blood-row {
+            display: flex; gap: 12px;
+            margin-bottom: 12px;
+            font-family: var(--font-cn);
+            align-items: baseline;
+            position: relative;
+            padding-left: 10px;
+        }
+        /* 左侧3px白金竖线 + 星光 */
+        .blood-row::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 4px; bottom: 4px;
+            width: 3px;
+            background: linear-gradient(to bottom, #f5f0d8, #fff8e0, #f5f0d8);
+            border-radius: 2px;
+            opacity: 0.85;
+            box-shadow: 0 0 8px rgba(245, 240, 216, 0.7), 0 0 16px rgba(245, 240, 216, 0.3);
+            animation: starShimmer 4s ease-in-out infinite;
+        }
+        .blood-label {
+            color: #0a0a0a;
+            min-width: 130px;
+            font-weight: 900;
+            font-size: 18px;
+            letter-spacing: 2px;
+            flex-shrink: 0;
+            text-shadow: 0 0 6px rgba(0,0,0,0.05);
+        }
+        .blood-value {
+            color: #0a0a0a;
+            flex: 1;
+            font-size: 19px;
+            font-weight: 500;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+        /* 家族格言 —— 极深墨（与角色名同色），斜体加粗 */
+        .blood-row .blood-value.gold-motto {
+            color: #0a0a0a;
+            font-style: italic;
+            font-weight: 700;
+            text-shadow: 0 0 12px rgba(0,0,0,0.06);
+        }
+        /* 亲缘关系 —— 极深墨 */
+        .blood-row .blood-value.ink-light {
+            color: #0a0a0a;
+            font-size: 19px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+
+        /* ===== 第四折 · 图鉴 ===== */
+        .archive-block {
+            margin-bottom: 18px;
+        }
+        .archive-sub-title {
+            font-size: 20px;
+            color: #0a0a0a;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+            font-family: var(--font-cn);
+            display: flex; align-items: center; gap: 8px;
+            text-shadow: 0 0 16px rgba(0,0,0,0.06);
+        }
+        .archive-sub-title::before {
+            content: '❖';
+            color: #d4af37;
+            font-size: 14px;
+            text-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+        /* 网格布局，每个条目用细金线分隔 */
+        .archive-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px 18px;
+            font-size: 18px;
+            line-height: 1.9;
+            padding: 8px 0;
+        }
+        .archive-grid .a-label {
+            color: #0a0a0a;
+            font-weight: 900;
+            white-space: nowrap;
+            border-right: 1px solid rgba(245, 240, 216, 0.7);
+            padding-right: 16px;
+            text-shadow: 0 0 6px rgba(0,0,0,0.05);
+            box-shadow: 1px 0 6px rgba(245, 240, 216, 0.4);
+        }
+        .archive-grid .a-value {
+            color: #0a0a0a;
+            font-weight: 500;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+        .exam-tags {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-top: 6px;
+        }
+        /* 高考考点 —— 极深墨纯文字（去掉浅黄框） */
+        .exam-tag {
+            font-size: 16px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            color: #0a0a0a;
+            font-family: var(--font-cn);
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0,0,0,0.05);
+            box-shadow: none;
+        }
+        /* 高考考点容器改为行内排列，用金色圆点分隔 */
+        .exam-tags {
+            display: flex; flex-wrap: wrap; gap: 6px 14px;
+            margin-top: 6px;
+            align-items: center;
+        }
+        .exam-tags .exam-tag + .exam-tag::before {
+            content: '●';
+            color: #f0e6b8;
+            margin-right: 14px;
+            margin-left: -10px;
+            font-size: 8px;
+            text-shadow: 0 0 6px rgba(240,230,184,0.8);
+            align-self: center;
+        }
+        /* 文化彩蛋 —— 极深墨纯文字（去掉红边框和背景） */
+        .easter-text {
+            font-size: 18px;
+            color: #0a0a0a;
+            font-style: italic;
+            line-height: 1.9;
+            padding: 0;
+            background: transparent;
+            border-left: none;
+            border-radius: 0;
+            letter-spacing: 1px;
+            font-weight: 500;
+            text-shadow: 0 0 8px rgba(0,0,0,0.04);
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: 100px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 17, 40, 0.95);
+            border: 1px solid var(--gold);
+            color: #FFF8E7;
+            padding: 12px 24px;
+            border-radius: 4px;
+            z-index: 300;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            font-family: var(--font-cn);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            letter-spacing: 4px;
+        }
+        .toast.show { opacity: 1; }
+
+        /* 详情卡片左侧白金高光线 + 星光 */
+        .detail-card .gold-border-highlight {
+            position: absolute;
+            left: 16px;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(245,240,216,0), rgba(255,248,224,0.6), rgba(245,240,216,0));
+            box-shadow: 0 0 6px rgba(245, 240, 216, 0.6);
+            animation: starShimmer 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* 详情卡悬停：折页文字光晕略微增强（0.1s） */
+        .detail-fold {
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .detail-card.show .detail-fold:hover .char-name-gold,
+        .detail-card.show .detail-fold:hover .fold-title,
+        .detail-card.show .detail-fold:hover .power-name,
+        .detail-card.show .detail-fold:hover .blood-value.gold-motto {
+            filter: brightness(1.08);
+            transition: filter 0.1s ease;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .nav-title { font-size: 16px; letter-spacing: 2px; }
+            .nav-buttons { gap: 12px; }
+            .nav-btn { padding: 4px 10px; font-size: 13px; letter-spacing: 2px; }
+            .scroll-container { height: 140px; }
+            .scroll-content { padding: 0 1%; }
+            .scroll-col-row { letter-spacing: 0; }
+            .scroll-col-name { font-size: 16px; }
+            .scroll-col-motto { font-size: 11px; }
+            .scroll-col-region { font-size: 11px; }
+            .scroll-col-hint { font-size: 10px; }
+            .detail-card { width: calc(100vw - 16px); padding: 32px 24px 50px 28px; }
+            .char-name-gold { font-size: 44px; letter-spacing: 6px; }
+            .char-lingyan { font-size: 20px; }
+            .char-en-climate { font-size: 16px; }
+            .char-personality { font-size: 16px; }
+            .fold-title { font-size: 20px; letter-spacing: 4px; }
+            .power-name { font-size: 22px; }
+            .fold-content { font-size: 17px; }
+            .fold-value { font-size: 17px; }
+            .fold-label { font-size: 16px; }
+            .geo-correspond { font-size: 16px; }
+            .imagery-line { font-size: 17px; }
+            .blood-label { font-size: 16px; min-width: 0; }
+            .blood-value { font-size: 17px; }
+            .blood-row { flex-direction: column; gap: 2px; }
+            .archive-sub-title { font-size: 18px; }
+            .archive-grid { font-size: 16px; }
+            .exam-tag { font-size: 14px; }
+            .easter-text { font-size: 16px; }
+            .dot { width: 14px; height: 14px; }
+        }
+    </style>
+<script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+<script>
+(function(){
+  try{
+    var beacon=new BeaconAction({
+      appkey:'0WEB06U85YBSLJNL',
+      versionCode:'1.0.0',
+      channelID:'share',
+      delay:1000,
+      sessionDuration:30*60*1000,
+      isOversea:false,
+      needReportRqdEvent:false
+    });
+    beacon.onDirectUserAction('preview_page_view',{
+      'url':location.href,
+      'referrer':document.referrer,
+      'title':document.title,
+      'sandbox_id':'9a9023d7671b4c0883591074fa2ba340'
+    });
+  }catch(e){}
+})();
+</script></head>
+<body>
+    <!-- 首页蒙版 -->
+    <div id="overlay">
+        <div class="star-point"></div>
+        <!-- 金色氛围动效 · 极淡极慢 -->
+        <div class="ambient-ripple r1"></div>
+        <div class="ambient-ripple r2"></div>
+        <div class="ambient-ripple r3"></div>
+        <div class="ambient-ripple r4"></div>
+        <div class="ambient-wave"></div>
+        <div class="ambient-wind-layer">
+            <div class="wind-line w1"></div>
+            <div class="wind-line w2"></div>
+            <div class="wind-line w3"></div>
+            <div class="wind-line w4"></div>
+            <div class="wind-line w5"></div>
+            <div class="gold-dust d1"></div>
+            <div class="gold-dust d2"></div>
+            <div class="gold-dust d3"></div>
+            <div class="gold-dust d4"></div>
+            <div class="gold-dust d5"></div>
+            <div class="gold-dust d6"></div>
+            <div class="gold-dust d7"></div>
+        </div>
+        <div id="poetry">
+            <div class="poetry-line">你是否曾在热带雨林中，听见万物呼吸的节奏？</div>
+            <div class="poetry-line">你是否曾在沙漠深处，触碰到时间凝固的温度？</div>
+            <div class="poetry-line">你是否相信，每一次季风的到来，都是一场有预谋的赴约？</div>
+        </div>
+    </div>
+
+    <!-- 首页背景 -->
+    <div id="landing-page"></div>
+
+    <!-- 涟漪按钮 -->
+    <div id="start-button-container">
+        <button class="start-button" id="startBtn">
+            <div class="ripple-layer-3"></div>
+            <div class="ripple-layer-4"></div>
+            <div class="main-text">展开图卷</div>
+            <div class="sub-text">START</div>
+        </button>
+    </div>
+
+    <!-- 主页面 -->
+    <div id="main-page">
+        <!-- 顶部导航 -->
+        <nav class="navbar">
+            <div class="nav-title"><span class="en-text">CLIMATERIA</span><span class="cn-text"> · 气候万象志</span></div>
+            <div class="nav-buttons">
+                <button class="nav-btn active">万象图</button>
+                <button class="nav-btn">九州志</button>
+                <button class="nav-btn">谱系</button>
+                <button class="nav-btn">罗盘</button>
+                <button class="nav-btn">问灵</button>
+            </div>
+        </nav>
+
+        <!-- 地图区域 -->
+        <div class="map-container">
+            <img src="世界气候地图.jpg" alt="世界气候分布图" class="map-image" id="mapImage">
+            <div id="dots-container"></div>
+        </div>
+
+        <!-- 底部卷轴（牛皮纸） -->
+        <div class="scroll-container">
+            <div class="scroll-content" id="scrollContent">
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-name">将光标悬停于<br>地图之上</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-motto">探索27位<br>气候之灵</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-region">气候万象志</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-hint">悬停·点击<br>阅读每一缕风</div></div>
+                <div class="scroll-divider"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情遮罩 -->
+    <div class="detail-overlay" id="detailOverlay"></div>
+
+    <!-- 详情卡片（羊皮纸 · 四折经折装） -->
+    <div class="detail-card" id="detailCard">
+        <div class="gold-border-highlight"></div>
+        <div class="detail-layout">
+            <!-- 左侧画像区 (35%) -->
+            <div class="portrait-section" id="portraitSection">
+                <div class="portrait-frame" id="portraitFrame">
+                    <div class="portrait-loading" id="portraitLoading"></div>
+                    <img class="portrait-image" id="portraitImage" src="" alt="" style="display:none;">
+                </div>
+            </div>
+            <!-- 右侧文本区 (65%) -->
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- 画像放大查看层 —— 跳出牛皮纸，左侧 9:16 完整呈现 -->
+    <div class="portrait-fullscreen" id="portraitFullscreen">
+        <div class="portrait-fullscreen-wrap" id="portraitFullscreenWrap">
+            <img class="portrait-fullscreen-img" id="portraitFullscreenImg" src="" alt="">
+        </div>
+        <span class="portrait-fullscreen-hint">点击任意处收起</span>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">敬请期待</div>
+
+    <script>
+    /* ===== 27位角色数据（以人物图鉴.docx为准） ===== */
+    const characters = [
+        { id: 1, name: '雅拉', englishName: 'Yara', title: '万物织女', position: '长女·长姐', climate: '热带雨林气候', region: '亚马逊', country: '巴西', family: '雨林家', familyEmoji: '🌿', color: '#2d6b4f', personality: '加法之灵·繁茂如神笔', motto: '我给万物命名，让每一片叶子都有属于自己的声音。', spiritualPower: '加法之灵——不断叠加、繁衍、让生命覆盖生命', imagery: ['金刚鹦鹉', '王莲', '箭毒蛙', '层叠树冠'], easter: '手持羽毛笔，笔尖滴落巴西栗树的汁液', familyMotto: '繁茂是神的笔触。', siblings: '阿莎·苏丽·薇薇安', temperatureFamily: '温暖湿润', fullDescription: '雅拉之名源自图皮语中的"水之母"，她是亚马逊神话中流淌的河流女神。作为雨林家最年长的姐姐，她守护着地球上最为浩瀚的雨林——那片横跨南美大陆的翡翠之海。她的灵力是"加法之灵"，正如同亚马逊雨林的生物多样性冠绝全球——每平方公里可容纳超过1000种乔木，附生植物与绞杀榕层层叠叠，生命在生命之上生长，没有一寸土地是空的。', position2: { x: 91, y: 55 }, image: 'yara.png' },
+
+        { id: 2, name: '阿莎', englishName: 'Asha', title: '赤道织梦者', position: '次女·二姐', climate: '热带雨林气候', region: '刚果盆地', country: '刚果(金)', family: '雨林家', familyEmoji: '🌿', color: '#2d6b4f', personality: '丛林之灵·口述史诗', motto: '我织的不是树，我织的是部落的传说，和梦境。', spiritualPower: '丛林之灵——以密语编织部落传说与梦境', imagery: ['非洲象', '大猩猩', '热带雨林', '刚果河'], easter: '手持雕刻着部落图腾的木杖', familyMotto: '繁茂是神的笔触。', siblings: '雅拉·苏丽·薇薇安', temperatureFamily: '温暖湿润', fullDescription: '阿莎，斯瓦希里语中"生命"与"希望"的化身，她代表着非洲刚果盆地那片面积约200万平方公里的古老雨林。她的灵力是"丛林之灵"，正如同刚果雨林是非洲文明最古老的摇篮。她将雨林的密语编织成部落的传说与梦境——那些口述史诗穿越千年，依然在篝火旁被传颂。', position2: { x: 12, y: 61 }, image: 'asha.png' },
+
+        { id: 3, name: '苏丽', englishName: 'Suli', title: '群岛织雨者', position: '三女·三姐', climate: '热带雨林气候', region: '东南亚', country: '印尼/马来西亚', family: '雨林家', familyEmoji: '🌿', color: '#2d6b4f', personality: '群岛之灵·根脉相连', motto: '我不是一座岛，我是所有的岛，用根连在一起。', spiritualPower: '群岛之灵——海洋连接陆地、生命网络共生', imagery: ['珊瑚礁', '榕树', '火山', '巴迪克蜡染'], easter: '赤足行走于火山土壤之上', familyMotto: '繁茂是神的笔触。', siblings: '雅拉·阿莎·薇薇安', temperatureFamily: '湿热多雨', fullDescription: '苏丽，马来语中"继承"与"传承"的化身，她代表着东南亚马来群岛的热带雨林——这片雨林散落在超过两万座岛屿之上，每一座岛上的森林都通过洋流与季风相互连接，深海的根脉将陆地与海洋连成一整个生命网络。她是家族的"信使"，赤道无风带是她的主场。', position2: { x: 41, y: 58 }, image: 'suli.png' },
+
+        { id: 4, name: '薇薇安', englishName: 'Viviane', title: '古陆遗珠', position: '四女·四妹', climate: '热带雨林气候', region: '大洋洲', country: '巴布亚新几内亚', family: '雨林家', familyEmoji: '🌿', color: '#2d6b4f', personality: '孑遗之灵·沉默远古', motto: '我沉默，因为我记得冈瓦纳还在时的事。那时大地还没有分开，我们是同一片森林。', spiritualPower: '孑遗之灵——保留冈瓦纳古陆孑遗物种的记忆', imagery: ['桫椤', '南洋杉', '鹿角蕨', '极乐鸟'], easter: '脖颈挂一枚袋狼牙齿化石吊坠', familyMotto: '繁茂是神的笔触。', siblings: '雅拉·阿莎·苏丽', temperatureFamily: '温暖湿润', fullDescription: '薇薇安，拉丁语中"活着"与"有生命"的化身，她代表着大洋洲新几内亚岛与澳大利亚昆士兰湿热带的热带雨林——这片雨林面积虽不及前三者，却是地球上最古老的热带雨林之一，保留着冈瓦纳古陆的孑遗物种。她的灵力是"孑遗之灵"，正如这片雨林中的桫椤、南洋杉与鹿角蕨——它们是恐龙时代的活化石。', position2: { x: 49, y: 70 }, image: 'viviane.png' },
+
+        { id: 5, name: '巴霍', englishName: 'Baho', title: '长房嫡长孙', position: '长兄', climate: '热带季风气候', region: '恒河三角洲', country: '孟加拉国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '转折之灵·守时赴约', motto: '我准时赴约，因为整个世界都在等我的脚步。', spiritualPower: '转折之灵——与季节猛烈反转同频共振', imagery: ['恒河', '水稻田', '铜铃', '异色双瞳'], easter: '双眼异色——左眼如恒河深蓝，右眼如稻田金黄', familyMotto: '守时，是最古老的盟约。', siblings: '顾澜·林和音·陆云峥·光·咏熙', temperatureFamily: '温暖湿润', fullDescription: '巴霍，孟加拉语中"流动者"与"河流的魂魄"，他是季风家长房嫡长孙，守护着恒河三角洲——这片被南亚季风灌溉的土地。他的灵力是"转折之灵"，正与这种猛烈的季节反转同频共振。每年五月，他准时与南海的顾澜交接季风的信物，像一场从未失约的古老仪式。', position2: { x: 33, y: 45 }, image: 'baho.png' },
+
+        { id: 6, name: '顾澜', englishName: 'Gu Lan', title: '南海琴师', position: '长女', climate: '热带季风气候', region: '海南/台湾/南海', country: '中国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '潮汐之灵·浓烈奔放', motto: '我哭的时候是暴雨，我笑的时候是烈日——但我从不假装。', spiritualPower: '潮汐之灵——季风与潮汐之间深邃共振', imagery: ['椰林', '海龟', '珊瑚', '台风眼'], easter: '台风季来临时，她总是第一个冲向风暴中心', familyMotto: '守时，是最古老的盟约。', siblings: '巴霍·林和音·陆云峥·光·咏熙', temperatureFamily: '温暖湿润', fullDescription: '顾澜，名字中的"澜"是南海波澜壮阔的浪。她是季风家二房的长女，守护着中国南海、海南与台湾的热带季风。她的灵力是"潮汐之灵"，正如南海的季风与潮汐之间有着深邃的共振。她的性格浓烈而奔放，肤色深褐如椰壳，赤足踏浪，头发上别着鸡蛋花与珊瑚簪。', position2: { x: 40, y: 46 }, image: 'gu_lan.png' },
+
+        { id: 7, name: '林和音', englishName: 'Lin Heyin', title: '四时之音', position: '次女', climate: '亚热带季风气候', region: '中国江南', country: '中国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '织雨之灵·梅雨如丝', motto: '我织的不是布，是四时流转的韵脚。', spiritualPower: '织雨之灵——梅雨如织如丝，绵延不绝', imagery: ['竹林', '茶园', '梅雨', '乌篷船'], easter: '身穿随季节缓慢变色的绸衣', familyMotto: '守时，是最古老的盟约。', siblings: '巴霍·顾澜·陆云峥·光·咏熙', temperatureFamily: '温暖湿润', fullDescription: '林和音，名字中的"和音"是四时流转的天籁。她是季风家二房的次女，守护着中国江南的亚热带季风气候。她的灵力是"织雨之灵"，正如梅雨的细密如织、如丝如缕。她身穿随季节缓慢变色的绸衣——桃红、柳绿、稻黄、雪白，四时流转于她的衣袂之间。', position2: { x: 42, y: 38 }, image: 'lin_heyin.png' },
+
+        { id: 8, name: '陆云峥', englishName: 'Lu Yunzheng', title: '云卷云舒', position: '三子', climate: '温带季风气候', region: '中国华北/东北', country: '中国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '节令之灵·四季分明', motto: '我这里的四季，每一季都说话。', spiritualPower: '节令之灵——春耕夏长秋收冬藏，节令清晰可闻', imagery: ['长城', '落叶松', '雪原', '糖葫芦'], easter: '每年立冬，他带一串糖葫芦去江南看林和音', familyMotto: '守时，是最古老的盟约。', siblings: '巴霍·顾澜·林和音·光·咏熙', temperatureFamily: '四季分明', fullDescription: '陆云峥，名字中的"云峥"是云卷云舒的壮阔。他是季风家二房的三子，守护着中国华北与东北的温带季风气候。他的面容棱角分明，肤色如麦色，身穿深褐色棉袍，像一个从黄土高原走出来的北方汉子。', position2: { x: 47, y: 24 }, image: 'lu_yunzheng.png' },
+
+        { id: 9, name: '光', englishName: 'Hikari', title: '四季之光', position: '长女', climate: '温带季风气候', region: '日本/韩国', country: '日本/韩国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '四季之灵·候鸟为信', motto: '我的每一次转身，都是一整个季节。', spiritualPower: '四季之灵——春樱、夏蝉、秋枫、冬雪依次绽放', imagery: ['樱花', '富士山', '枫叶', '骨扇'], easter: '手握一把骨扇，扇面绘有候鸟的飞行路线', familyMotto: '守时，是最古老的盟约。', siblings: '巴霍·顾澜·林和音·陆云峥·咏熙', temperatureFamily: '温和湿润', fullDescription: '光，日语中"光"与"四季之光"的化身，她是季风家三房的长女，守护着日本与韩国的温带季风气候。她的长发也随季节变幻颜色——樱粉、翠绿、枫红、雪白。她手握一把骨扇，扇面绘有候鸟的飞行路线与二十四节气花卉。', position2: { x: 47, y: 27 }, image: 'hikari.png' },
+
+        { id: 10, name: '咏熙', englishName: 'Yongxi', title: '越洋家书', position: '四子', climate: '亚热带季风气候', region: '北美东海岸', country: '美国', family: '季风家', familyEmoji: '🌊', color: '#1a3a5c', personality: '跨洋之灵·远渡回声', motto: '我站在最远的东方，却依然听得见季风的回音。', spiritualPower: '跨洋之灵——穿越大洋听见东亚季风乡音', imagery: ['枫叶', '白桦林', '贝壳', '粗呢外套'], easter: '手中常握一枚大西洋的贝壳', familyMotto: '守时，是最古老的盟约。', siblings: '巴霍·顾澜·林和音·陆云峥·光', temperatureFamily: '温和湿润', fullDescription: '咏熙，名字中的"咏熙"是咏唱光明与温暖的歌。他是季风家三房的次子，守护着北美东海岸的亚热带季风气候。他的面容保留着亚洲的骨骼轮廓，却穿着北美粗呢外套，手中常握一枚大西洋的贝壳。', position2: { x: 81, y: 34 }, image: 'yongxi.png' },
+
+        { id: 11, name: '凯瑞', englishName: 'Keri', title: '金焰游牧者', position: '长子·长兄', climate: '热带草原气候', region: '东非大裂谷', country: '坦桑尼亚/肯尼亚', family: '草原家', familyEmoji: '🌾', color: '#c49a3c', personality: '脉冲之灵·心跳如雨', motto: '我在大地上写诗，每一行都是蹄印与雨水。', spiritualPower: '脉冲之灵——旱雨季交替如心跳', imagery: ['角马', '斑马', '马赛束卡', '长矛'], easter: '手持长矛与皮盾', familyMotto: '风过处，皆有我们的足印。', siblings: '巴特尔·帕查·塔拉', temperatureFamily: '温暖干燥', fullDescription: '凯瑞，马赛语中"雨水到来者"的化身，他是草原家的长子，守护着东非大裂谷的热带草原。他的肤色深赭如落日，身披红色马赛束卡，手持长矛与皮盾。每年湿季，赤道低气压带北移形成连绵暴雨；干季则受信风控制，大地龟裂，角马与斑马开始千公里级迁徙。', position2: { x: 16, y: 54 }, image: 'keri.png' },
+
+        { id: 12, name: '巴特尔', englishName: 'Baatar', title: '长风守望者', position: '次子·次兄', climate: '温带草原气候', region: '蒙古高原', country: '蒙古国', family: '草原家', familyEmoji: '🌾', color: '#c49a3c', personality: '均衡之灵·边界扎根', motto: '风来的时候我不弯腰，只把根扎得更深一寸。', spiritualPower: '均衡之灵——四季呼吸间找到边界平衡', imagery: ['蒙古包', '骏马', '雄鹰', '马头琴'], easter: '手握一把马头琴，琴音里有草浪与鹰的翅膀', familyMotto: '风过处，皆有我们的足印。', siblings: '凯瑞·帕查·塔拉', temperatureFamily: '干燥少雨', fullDescription: '巴特尔，蒙古语中的"英雄"与"勇士"，他是草原家的次子，守护着蒙古高原的温带草原。他身穿深蓝色蒙古袍，腰系银带，手握一把马头琴，琴音里有草浪与鹰的翅膀。他的灵力是"均衡之灵"，因为在这里，四季不是在渐变，而是在呼吸——每一季都有其边界。', position2: { x: 40, y: 25 }, image: 'baatar.png' },
+
+        { id: 13, name: '帕查', englishName: 'Pacha', title: '南美游牧者', position: '三子·三弟', climate: '热带草原气候', region: '巴西高原', country: '巴西', family: '草原家', familyEmoji: '🌾', color: '#c49a3c', personality: '节奏之灵·桑巴鼓点', motto: '大哥在非洲渡河，二哥在蒙古等雪，而我在南美守着一整片高原的节拍。', spiritualPower: '节奏之灵——旱雨季交替如桑巴鼓点', imagery: ['大食蚁兽', '凤梨花', '水葫芦', '巴西高原'], easter: '腰间挂着一只水葫芦容器', familyMotto: '风过处，皆有我们的足印。', siblings: '凯瑞·巴特尔·塔拉', temperatureFamily: '温暖干燥', fullDescription: '帕查，克丘亚语中的"大地"与"世界"，他是草原家的三子，守护着巴西高原的热带草原。他腰间挂着一只水葫芦容器，保存着每一场雨季的第一滴水——那是他用来"校准节拍"的音叉。', position2: { x: 91, y: 80 }, image: 'pacha.png' },
+
+        { id: 14, name: '塔拉', englishName: 'Tara', title: '澳洲游牧者', position: '四子·四弟', climate: '热带草原气候', region: '澳大利亚北部', country: '澳大利亚', family: '草原家', familyEmoji: '🌾', color: '#c49a3c', personality: '火草之灵·再生之火', motto: '我的火和雨交替着来——火把土地烧成红色，雨再把它浇成绿色。', spiritualPower: '火草之灵——旱季烈火与雨季绿意交替', imagery: ['袋鼠', '桉树', '白千层', '雷暴野火'], easter: '身上绘有原住民风格的点彩图腾', familyMotto: '风过处，皆有我们的足印。', siblings: '凯瑞·巴特尔·帕查', temperatureFamily: '炎热干燥', fullDescription: '塔拉，澳大利亚原住民语中的"岩石"与"土地"，他是草原家的四子，守护着澳大利亚北部那片被烈火与雨季交替塑造的热带草原。旱季时，雷暴引发的野火是这片草原最炽热的语言——火不是毁灭，而是再生的前奏。', position2: { x: 42, y: 70 }, image: 'tara.png' },
+
+        { id: 15, name: '莱依姆', englishName: 'Laïm', title: '赤金守夜人', position: '长女·长姐', climate: '热带沙漠气候', region: '撒哈拉', country: '阿尔及利亚', family: '干旱家', familyEmoji: '🏜️', color: '#b8804a', personality: '记忆之灵·沙藏古海', motto: '你以为我渴？不。我只是把海藏在了每一粒沙里。', spiritualPower: '记忆之灵——撒哈拉曾为湿润草原，沙粒封存远古河床', imagery: ['金字塔', '单峰驼', '沙狐', '琥珀眼瞳'], easter: '眼眸是琥珀色的，像被风沙打磨了千年的宝石', familyMotto: '我们把海藏在了沙里。', siblings: '卡里姆·瓦拉', temperatureFamily: '炎热干燥', fullDescription: '莱依姆，柏柏尔语中的"金沙"，她是干旱家的长女，守护着撒哈拉沙漠——这片面积超过900万平方公里、地球上最大的热带沙漠。她的灵力是"记忆之灵"，因为撒哈拉并非生来就是沙漠——在数万年前，它曾是湿润的草原与湖泊。', position2: { x: 14, y: 40 }, image: 'laim.png' },
+
+        { id: 16, name: '卡里姆', englishName: 'Karim', title: '新月独行者', position: '次子·次兄', climate: '热带沙漠气候', region: '阿拉伯半岛', country: '沙特阿拉伯', family: '干旱家', familyEmoji: '🏜️', color: '#b8804a', personality: '星辰之灵·商队灯塔', motto: '我这里的白天是金子的颜色，夜晚是墨水的颜色——商队在金子与墨水之间走了三千年。', spiritualPower: '星辰之灵——极端温差使夜空清澈，星明导航', imagery: ['椰枣', '贝都因帐篷', '清真寺', '阿拉伯商队'], easter: '腰间挂着一个装满香料的铜壶', familyMotto: '我们把海藏在了沙里。', siblings: '莱依姆·瓦拉', temperatureFamily: '炎热干燥', fullDescription: '卡里姆，阿拉伯语中的"慷慨"与"高贵"，他是干旱家的次子，守护着阿拉伯半岛的热带沙漠。他的灵力是"星辰之灵"，因为沙漠白昼极端炎热（可达50℃），夜晚却因无云层保温而急剧降温（可降至10℃以下），这种极端的温差使夜空异常清澈，星光明亮如导航的灯塔。', position2: { x: 25, y: 40 }, image: 'karim.png' },
+
+        { id: 17, name: '瓦拉', englishName: 'Wala', title: '红土独梦者', position: '三子·三弟', climate: '热带沙漠气候', region: '澳大利亚中部', country: '澳大利亚', family: '干旱家', familyEmoji: '🏜️', color: '#b8804a', personality: '梦时之灵·梦时走远', motto: '我不是沙，我是梦。我在时间里走得最远，比海更远，比风更远。', spiritualPower: '梦时之灵——时间不走钟表走梦时', imagery: ['艾尔斯岩', '袋鼠', '蛋白石', '原住民岩画'], easter: '坐在一块红色岩石上，手中握着一块蛋白石', familyMotto: '我们把海藏在了沙里。', siblings: '莱依姆·卡里姆', temperatureFamily: '炎热干燥', fullDescription: '瓦拉，澳大利亚原住民语中的"火"与"燃烧"，他是干旱家的三子，守护着澳大利亚中部那片覆盖了大陆约40%面积的红土沙漠。他的灵力是"梦时之灵"，因为在这片沙漠里，时间不走钟表，只走"梦时"——那是原住民理解世界的方式，数万年前的歌谣仍在石壁上回响。', position2: { x: 46, y: 74 }, image: 'wala.png' },
+
+        { id: 18, name: '伊莱拉', englishName: 'Elara', title: '薄雾织者', position: '长女·长姐', climate: '温带海洋性气候', region: '西欧', country: '英国', family: '西风家', familyEmoji: '🍃', color: '#7a96a8', personality: '薄雾之灵·温柔多变', motto: '我不是没有性格，我只是把性格藏在了每一场雨里。', spiritualPower: '薄雾之灵——将多变天气编织成永不停止的薄雾', imagery: ['灰蓝斗篷', '雨伞', '薄雾', '大西洋暖流'], easter: '身披灰蓝色斗篷，手持一把永远潮湿的雨伞', familyMotto: '温柔，是最绵长的力量。', siblings: '西尔维·瑟西拉', temperatureFamily: '温和湿润', fullDescription: '伊莱拉，希腊语中的"光辉"，她是西风家的长女，守护着西欧的温带海洋性气候。她的性格温柔而多变，情绪如雾般细腻而难以捉摸——正如温带海洋性气候的"阴晴不定"，一日之内阳光与细雨交替出现。她的灵力是"薄雾之灵"，因为西风带带来的气旋活动是西欧天气多变的核心驱动力。', position2: { x: 15, y: 17 }, image: 'elara.png' },
+
+        { id: 19, name: '西尔维', englishName: 'Sylvie', title: '雾影守望者', position: '次女·次妹', climate: '温带海洋性气候', region: '北美西海岸', country: '美国', family: '西风家', familyEmoji: '🍃', color: '#7a96a8', personality: '雾林之灵·红木水源', motto: '雾是我写给太平洋的诗——姐姐读得懂，海浪读得懂，红木也读得懂。', spiritualPower: '雾林之灵——雾是红木林的"水源"', imagery: ['红木林', '海狮', '苔藓', '月光石'], easter: '肌肤如月光石般透亮，卷曲浅棕长发间别着红木叶', familyMotto: '温柔，是最绵长的力量。', siblings: '伊莱拉·瑟西拉', temperatureFamily: '温和湿润', fullDescription: '西尔维，法语中的"森林"，她是西风家的次女，守护着北美西海岸温带海洋性气候下的温带雨林——红木林。她的灵力是"雾林之灵"，因为这里的雾不仅仅是一种天气现象——它是红木林的"水源"，红木林的树冠能够截留雾气中的水分，让森林在旱季依然保持湿润。', position2: { x: 68, y: 25 }, image: 'sylvie.png' },
+
+        { id: 20, name: '瑟西拉', englishName: 'Cersila', title: '西风孤望者', position: '养女', climate: '地中海气候', region: '澳洲西南部', country: '澳大利亚', family: '西风家', familyEmoji: '🍃', color: '#7a96a8', personality: '旱夏之灵·等待雨信', motto: '我不等风来，我等雨信。', spiritualPower: '旱夏之灵——漫长干渴中等待冬季雨水', imagery: ['桉树叶', '石灰岩', '贝壳', '麻质长裙'], easter: '手中握着一枚扁平的贝壳或一截干枯的桉树枝', familyMotto: '温柔，是最绵长的力量。', siblings: '伊莱拉·西尔维', temperatureFamily: '温暖干燥', fullDescription: '瑟西拉，拉丁语中"西风之女"的化身，她是西风家的养女，守护着澳大利亚西南部的地中海气候——这是全球五大地中海气候区中最孤悬于大洋之中的一个。她不是伊莱拉和西尔维正式承认的妹妹，而是西风带上被遗忘的一支。每年雨季结束后，她会寄一片干枯的桉树叶给伊莱拉。', position2: { x: 41, y: 83 }, image: 'cersila.png' },
+
+        { id: 21, name: '维塔', englishName: 'Vitya', title: '西伯利亚守望者', position: '长子·长兄', climate: '温带大陆性气候', region: '西伯利亚', country: '俄罗斯', family: '大陆家', familyEmoji: '🏔️', color: '#5a6a7a', personality: '大寒之灵·年轮记忆', motto: '冷，让我记得更清楚。', spiritualPower: '大寒之灵——泰加林极寒缓慢生长', imagery: ['针叶林', '雪豹', '驯鹿', '冰封湖面'], easter: '背着一把复合弓，箭囊里装着冰晶制成的箭', familyMotto: '冷，让我们记得更久。', siblings: '沈寒川·列昂', temperatureFamily: '冬冷夏热', fullDescription: '维塔，俄语中的"胜利者"，他是大陆家的长子，守护着西伯利亚的温带大陆性气候——这片土地是地球上最寒冷的人类居住区之一，冬季均温低至-40℃。他的灵力是"大寒之灵"，因为这里的针叶林——泰加林——是地球上最大的森林带，它们在极寒中缓慢生长，年轮极窄极密，每一圈年轮都是对寒冷的一次确认。', position2: { x: 29, y: 21 }, image: 'vitya.png' },
+
+        { id: 22, name: '沈寒川', englishName: 'Shen Hanchuan', title: '丝路驼铃', position: '次子·次兄', climate: '温带大陆性气候', region: '中国西北', country: '中国', family: '大陆家', familyEmoji: '🏔️', color: '#5a6a7a', personality: '大漠之灵·丝路诗篇', motto: '我的夏天和冬天，隔着一整个秋天的距离。', spiritualPower: '大漠之灵——温差如冰火交替', imagery: ['莫高窟', '月牙泉', '胡杨', '丝路古道'], easter: '身穿褪色棉袍，内侧用碳灰写着丝路诗', familyMotto: '冷，让我们记得更久。', siblings: '维塔·列昂', temperatureFamily: '冬冷夏热', fullDescription: '沈寒川，名字中的"寒川"是寒冷的大河，他是大陆家的次子，守护着中国西北与内蒙古的温带大陆性气候。中国西北深居亚洲内陆，距海遥远，加上青藏高原的抬升阻挡了来自印度洋的水汽，使这片土地成为典型的干旱半干旱温带大陆性气候区，冬寒夏暑、温差巨大是它的标志。', position2: { x: 35, y: 28 }, image: 'shen_hanchuan.png' },
+
+        { id: 23, name: '列昂', englishName: 'Leon', title: '平原独行者', position: '三子·三弟', climate: '温带大陆性气候', region: '北美中西部', country: '美国', family: '大陆家', familyEmoji: '🏔️', color: '#5a6a7a', personality: '风暴之灵·龙卷之语', motto: '我不是沉默的大陆，我把所有的话都藏在风里。', spiritualPower: '风暴之灵——全球最密集龙卷风带', imagery: ['野牛', '大峡谷', '麦田', '龙卷风'], easter: '戴着一顶牛仔帽，帽檐上插着一根鹰羽', familyMotto: '冷，让我们记得更久。', siblings: '维塔·沈寒川', temperatureFamily: '冬冷夏热', fullDescription: '列昂，希腊语中的"狮子"，他是大陆家的三子，守护着北美中西部大平原的温带大陆性气候。他的灵力是"风暴之灵"，因为北美大陆内部这种极端的温差与平原地形共同塑造了全球最密集的龙卷风带——平均每年超过1000次。', position2: { x: 73, y: 20 }, image: 'leon.png' },
+
+        { id: 24, name: '纳努克', englishName: 'Nanuk', title: '冰原回音者', position: '长女·长姐', climate: '寒带·冰原气候', region: '格陵兰', country: '丹麦', family: '寒冰家', familyEmoji: '❄️', color: '#a8c0d0', personality: '时间之灵·冰芯档案', motto: '我沉默，因为需要记住的事情太多了。', spiritualPower: '时间之灵——冰原本身是时间的档案馆', imagery: ['北极熊', '冰盖', '冰芯气泡', '冰蓝长袍'], easter: '身穿月白与冰蓝交织的长袍，衣袍上绣有冰芯气泡的图案', familyMotto: '冰封，是为了记住。', siblings: '索尔维格', temperatureFamily: '极寒', fullDescription: '纳努克，因纽特语中的"北极熊"，她是寒冰家的长女，守护着格陵兰岛——全球最大的岛屿，其80%以上的面积被永久冰盖覆盖，冰层平均厚度超过1500米。格陵兰冰盖是北半球最大的冰体，冰芯中封存着过去80万年的地球气候记录——每一层冰、每一个气泡都记录着远古大气的成分、温度和二氧化碳浓度。', position2: { x: 83, y: 5 }, image: 'nanuk.png' },
+
+        { id: 25, name: '索尔维格', englishName: 'Solveig', title: '苔原轻语者', position: '次女·次妹', climate: '寒带·苔原气候', region: '北极圈', country: '挪威', family: '寒冰家', familyEmoji: '❄️', color: '#a8c0d0', personality: '解冻之灵·花开紧迫', motto: '姐姐记得时间，我记得时间里的每一朵花。', spiritualPower: '解冻之灵——唤醒苔原上每一朵云莓花', imagery: ['北极狐', '驯鹿', '云莓花', '极光'], easter: '浅金色长发编成一条粗辫子，发间别着云莓花与红色浆果', familyMotto: '冰封，是为了记住。', siblings: '纳努克', temperatureFamily: '寒冷', fullDescription: '索尔维格，古诺尔斯语中的"太阳之路"，她是寒冰家的次女，守护着北极圈的极地苔原气候。她的灵力是"解冻之灵"，因为在短暂的北极夏天（仅约6-8周），她唤醒苔原上每一朵云莓花、每一片苔藓和地衣。', position2: { x: 36, y: 7 }, image: 'solveig.png' },
+
+        { id: 26, name: '江铮', englishName: 'Jiang Zheng', title: '江河之源', position: '长女·独女', climate: '高原山地气候', region: '中国青藏高原', country: '中国', family: '高山家', familyEmoji: '⛰️', color: '#6a8a7a', personality: '天梯之灵·垂直穿越', motto: '我站在世界最高的地方，替大地看管最初的水。', spiritualPower: '天梯之灵——垂直穿越所有气候带', imagery: ['珠穆朗玛峰', '牦牛', '经幡', '布达拉宫'], easter: '手持转经筒，每转一圈就有一朵雪莲绽放', familyMotto: '站得越高，看得越远。', siblings: '无', temperatureFamily: '高寒', fullDescription: '江铮，名字中的"铮"是铮铮铁骨的铮，她是高山家的独女，也是唯一的继承者，守护着中国青藏高原——这片平均海拔超过4000米的"世界屋脊"。她是孤高的守望者，也是亚洲所有大河的源头。', position2: { x: 33, y: 35 }, image: 'jiang_zheng.png' },
+
+        { id: 27, name: '伊塔卡', englishName: 'Itacha', title: '琥珀酿酒师', position: '独子', climate: '地中海气候', region: '地中海沿岸', country: '希腊', family: '孤独者', familyEmoji: '⭐', color: '#c67c3e', personality: '蒸馏之灵·跨越对立', motto: '我不属于任何阵营，所以才能拥抱所有的对立。', spiritualPower: '蒸馏之灵——将夏日烈日浓缩成冬日温暖', imagery: ['橄榄树', '葡萄酒', '陶罐', '亚麻衬衫'], easter: '身穿洗得发白的亚麻衬衫，外罩深棕色皮围裙', familyMotto: '我不属于任何阵营。', siblings: '无', temperatureFamily: '温暖干燥', fullDescription: '伊塔卡，希腊语中的"归途"与"酿造"，他是孤独者唯一的成员，守护着地中海沿岸那片被阳光与海风浸润的独特气候。他是"蒸馏之灵"，他把夏日猛烈而持续的日照——那是地中海气候最慷慨的馈赠——浓缩成冬日餐桌上的温暖。他是所有家族的座上宾，却从不属于任何一方。', position2: { x: 14, y: 30 }, image: 'itacha.png' }
+    ];
+
+    /* ===== 角色扩展数据（地理 / 高考考点 / 灵力释义），嵌入到每个角色对象 ===== */
+    const charGeoData = {
+        1: { spiritualPowerName: '加法之灵', spiritualPowerMeaning: '我不断叠加、繁衍、创造——每平方公里容纳超过1000种乔木，生命在生命之上生长，没有一寸土地是空的。', geoDescription: '赤道低气压带终年控制，盛行上升气流，全年高温多雨，年均温26℃以上，年降水量超过2000毫米。', distribution: '赤道附近（南北纬10°之间）', cause: '终年受赤道低气压带控制，盛行上升气流', characteristics: '全年高温多雨，年均温25-28℃，年降水量>2000mm，气温年较差极小', representative: '热带雨林（乔木层3-5层，附生植物丰富）', examPoints: ['气压带风带对气候的影响', '生物多样性成因'] },
+        2: { spiritualPowerName: '丛林之灵', spiritualPowerMeaning: '我将雨林的密语编织成部落的传说与梦境——那些口述史诗穿越千年，依然在篝火旁被传颂。', geoDescription: '赤道低气压带终年控制，刚果河流淌其中，是世界上流量第二大的河流，雨林面积约200万平方公里。', distribution: '赤道附近（刚果盆地，5°N-10°S）', cause: '终年受赤道低气压带控制', characteristics: '终年高温多雨，地势起伏，河流纵横', representative: '热带雨林（刚果河、大猩猩）', examPoints: ['气压带风带', '热带雨林分布与成因'] },
+        3: { spiritualPowerName: '群岛之灵', spiritualPowerMeaning: '超过两万座岛屿上的森林通过洋流与季风相互连接，深海的根脉将陆地与海洋连成一整个生命网络。', geoDescription: '赤道两侧，被南海与太平洋环绕，受海洋影响最深的热带雨林，位于太平洋板块、亚欧板块与印度-澳大利亚板块交界处。', distribution: '赤道附近（东南亚群岛，10°N-10°S）', cause: '终年受赤道低气压带控制', characteristics: '全年高温多雨，海洋性显著', representative: '热带雨林（大王花、红毛猩猩）', examPoints: ['板块运动与岛屿雨林', '生物多样性'] },
+        4: { spiritualPowerName: '孑遗之灵', spiritualPowerMeaning: '桫椤、南洋杉与鹿角蕨——它们是恐龙时代的活化石，在板块漂移与气候巨变中存活至今，像一本翻了一半就凝固的地质年谱。', geoDescription: '新几内亚岛位于太平洋板块与印度-澳大利亚板块交界处，是地球上最古老的热带雨林之一，保留着冈瓦纳古陆的孑遗物种。', distribution: '赤道附近（大洋洲·新几内亚岛）', cause: '终年受赤道低气压带控制', characteristics: '全年高温多雨，古老物种丰富', representative: '热带雨林（桫椤、极乐鸟）', examPoints: ['冈瓦纳古陆与孑遗物种', '板块运动对生物分布的影响'] },
+        5: { spiritualPowerName: '转折之灵', spiritualPowerMeaning: '旱季与雨季的切换如同翻书一般干脆——夏季西南风带来海洋水汽，冬季东北风带来干燥。', geoDescription: '海陆热力性质差异 + 气压带风带季节移动，夏季赤道低气压带北移，西南季风从印度洋带来丰沛水汽；冬季蒙古高压南下，形成东北季风。', distribution: '南亚（恒河三角洲，8°N-30°N）', cause: '海陆热力性质差异 + 气压带风带季节移动', characteristics: '旱雨季分明，年降水量2000-3000mm', representative: '热带季雨林、水稻田', examPoints: ['季风环流成因', '西南季风与农业'] },
+        6: { spiritualPowerName: '潮汐之灵', spiritualPowerMeaning: '南海的季风与潮汐之间有着深邃的共振——夏季西南季风与东南季风共同作用，降水占全年的80%以上。', geoDescription: '夏季受西南季风与东南季风共同影响，冬季受东北季风控制，热带气旋（台风）频发。', distribution: '中国海南/台湾/南海（15°N-25°N）', cause: '海陆热力性质差异', characteristics: '夏半年降水占全年80%以上，台风频发', representative: '热带季雨林、椰林、珊瑚礁', examPoints: ['南海季风', '热带气旋'] },
+        7: { spiritualPowerName: '织雨之灵', spiritualPowerMeaning: '梅雨如织、如丝如缕——每年6月中旬至7月中旬，冷暖气团在长江中下游交汇，形成准静止锋，细雨绵延不绝。', geoDescription: '秦岭-淮河以南，夏季受东南季风与西南季风共同影响，高温多雨；冬季受西北季风控制，温和少雨。', distribution: '中国江南（25°N-35°N）', cause: '海陆热力性质差异', characteristics: '四季分明，梅雨（6月中-7月中），年降水量1000-1600mm', representative: '亚热带常绿阔叶林、水稻田', examPoints: ['梅雨成因（准静止锋）', '季风气候对农业的影响'] },
+        8: { spiritualPowerName: '节令之灵', spiritualPowerMeaning: '温带季风的节令秩序清晰到几乎可以被听见——春耕、夏长、秋收、冬藏，每一季都有它应有的模样。', geoDescription: '夏季受东南季风影响，暖湿多雨；冬季受蒙古高压控制，寒冷干燥，冬夏温差可达40℃以上。', distribution: '中国华北/东北（35°N-50°N）', cause: '海陆热力性质差异', characteristics: '四季分明，冬夏温差>40℃，降水集中夏季', representative: '温带落叶阔叶林、小麦、玉米', examPoints: ['温带季风气候特征', '春旱与灌溉'] },
+        9: { spiritualPowerName: '四季之灵', spiritualPowerMeaning: '春樱、夏蝉、秋枫、冬雪在我的指尖依次绽放——日本西海岸的冬季大雪是日本海效应最极致的表达。', geoDescription: '夏季东南季风带来太平洋暖湿气流，高温多雨；冬季西北季风穿越日本海，在日本西海岸形成大量降雪。', distribution: '日本/韩国（30°N-45°N）', cause: '海陆热力性质差异 + 洋流（日本暖流）', characteristics: '四季分明，冬季日本海一侧大雪', representative: '温带落叶阔叶林、樱花', examPoints: ['日本海效应（冬季风+暖流）', '洋流对气候的影响'] },
+        10: { spiritualPowerName: '跨洋之灵', spiritualPowerMeaning: '我听见的季风里藏着太平洋彼岸的乡音——那是东亚季风穿越大洋之后最后的回声。', geoDescription: '受到阿巴拉契亚山脉和大西洋暖流（墨西哥湾暖流）的影响，冬季降水量比东亚略多，气温年较差稍小。', distribution: '北美东海岸（25°N-45°N）', cause: '海陆热力性质差异 + 洋流（墨西哥湾暖流）', characteristics: '冬季降水量比东亚略多，气温年较差稍小', representative: '亚热带常绿阔叶林、枫树', examPoints: ['洋流对气候的影响', '阿巴拉契亚山脉与降水'] },
+        11: { spiritualPowerName: '脉冲之灵', spiritualPowerMeaning: '旱季与雨季的交替如同心跳——湿季大地蓬勃如鼓点密集，干季寂静如休止符。', geoDescription: '赤道低气压带与信风带交替控制，湿季受赤道低气压带影响多雨，干季受信风控制干燥。', distribution: '东非大裂谷（10°S-10°N）', cause: '赤道低气压带与信风带交替控制', characteristics: '干湿季分明，年降水量500-1500mm', representative: '稀树草原（萨瓦纳）、角马、金合欢树', examPoints: ['气压带风带移动', '动物大迁徙与气候'] },
+        12: { spiritualPowerName: '均衡之灵', spiritualPowerMeaning: '四季不是在渐变，而是在呼吸——每一季都有其边界，而草原的生命力正是在这种边界之中找到平衡。', geoDescription: '深居亚洲大陆腹地，距海遥远，冬季蒙古高压形成，是冷空气的源地；夏季温带气旋偶尔带来降水。', distribution: '蒙古高原（40°N-55°N）', cause: '深居内陆，距海遥远', characteristics: '年降水量250-450mm，冬季寒冷漫长', representative: '温带草原、蒙古马', examPoints: ['温带大陆性气候', '蒙古高压与冬季风'] },
+        13: { spiritualPowerName: '节奏之灵', spiritualPowerMeaning: '南半球的热带草原与北半球恰好相反——当北半球进入干季时，南半球的高原则迎来雨季。', geoDescription: '赤道低气压带与信风带交替控制（南半球），干湿季与北半球相反，植被以塞拉多稀树草原为主。', distribution: '巴西高原（5°S-25°S）', cause: '赤道低气压带与信风带交替控制', characteristics: '干湿季分明（与北半球相反）', representative: '稀树草原（塞拉多）、美洲鸵鸟', examPoints: ['气压带风带移动', '南半球热带草原'] },
+        14: { spiritualPowerName: '火草之灵', spiritualPowerMeaning: '旱季的烈火与雨季的绿意在我手中交替——火不是毁灭，而是再生的前奏。', geoDescription: '受澳大利亚大陆古老而贫瘠的土壤条件影响，植被较为稀疏，旱季雷暴引发的野火是草原的天然更新机制。', distribution: '澳大利亚北部（10°S-25°S）', cause: '赤道低气压带与信风带交替控制', characteristics: '干湿季分明，旱季野火', representative: '稀树草原、桉树、袋鼠', examPoints: ['澳大利亚古老大陆与干旱', '自然火灾生态'] },
+        15: { spiritualPowerName: '记忆之灵', spiritualPowerMeaning: '撒哈拉并非生来就是沙漠——在数万年前，它曾是湿润的草原与湖泊，那些远古的河床与贝类化石被封存在沙粒深处。', geoDescription: '副热带高压带终年控制，干燥的东北信风从欧亚大陆吹来，几乎不含水汽；年均降水量不足100mm，蒸发量是降水量的20倍以上。', distribution: '撒哈拉沙漠（15°N-35°N）', cause: '副热带高压带控制 + 干燥信风', characteristics: '年降水量<100mm，蒸发量>降水量20倍', representative: '沙漠、沙狐、骆驼刺', examPoints: ['副热带高压带成因', '沙漠化'] },
+        16: { spiritualPowerName: '星辰之灵', spiritualPowerMeaning: '白昼极端炎热（可达50℃），夜晚无云层保温急剧降温（可降至10℃以下），星空清澈如导航的灯塔。', geoDescription: '受副热带高压控制，同时处于雨影区——夏季风从海洋吹来时，水分在山脉迎风坡形成降水，背风坡干燥。', distribution: '阿拉伯半岛（15°N-30°N）', cause: '副热带高压带控制 + 雨影效应', characteristics: '白昼>50℃，夜间<10℃，日较差极大', representative: '沙漠、单峰驼、椰枣树', examPoints: ['副热带高压带', '雨影效应'] },
+        17: { spiritualPowerName: '梦时之灵', spiritualPowerMeaning: '在这片沙漠里，时间不走钟表，只走「梦时」——数万年前的歌谣仍在石壁上回响，过去与现在重叠在一起。', geoDescription: '受副热带高压带影响，同时因澳大利亚大陆古老而平坦，来自印度洋的水汽难以深入内陆，东澳大利亚暖流水汽在山脉东坡形成降水，内陆处于雨影区。', distribution: '澳大利亚中部（20°S-35°S）', cause: '副热带高压带 + 深居内陆 + 雨影效应', characteristics: '年降水量<250mm，红土沙漠', representative: '红土沙漠、乌鲁鲁、回旋镖', examPoints: ['副热带高压带', '古老大陆与沙漠成因'] },
+        18: { spiritualPowerName: '薄雾之灵', spiritualPowerMeaning: '西风带带来的气旋活动是西欧天气多变的核心驱动力，而在我手中，这种多变被编织成一场永不停止的薄雾。', geoDescription: '终年受西风带控制，北大西洋暖流将赤道附近的暖水输送到高纬度，使西欧的冬天远比同纬度地区温暖。', distribution: '西欧（45°N-60°N）', cause: '终年受西风带控制 + 北大西洋暖流', characteristics: '全年温和湿润，年降水量700-1000mm', representative: '温带落叶阔叶林、石楠花', examPoints: ['西风带', '北大西洋暖流对西欧气候的影响'] },
+        19: { spiritualPowerName: '雾林之灵', spiritualPowerMeaning: '这里的雾不仅仅是天气现象——它是红木林的「水源」，树冠能够截留雾气中的水分，让森林在旱季依然保持湿润。', geoDescription: '受西风带控制，水汽在遇到海岸山脉时被迫抬升形成地形雨，降水量远高于西欧（可达2000mm以上）；加利福尼亚寒流与阿拉斯加暖流交汇，终年多雾。', distribution: '北美西海岸（38°N-48°N）', cause: '西风带 + 地形抬升 + 洋流交汇', characteristics: '降水量>2000mm（地形雨），终年多雾', representative: '温带雨林（红木林）', examPoints: ['地形雨成因', '洋流与气候'] },
+        20: { spiritualPowerName: '逆行之灵', spiritualPowerMeaning: '当北半球的地中海在夏季被副热带高压笼罩时，南半球的地中海正被西风带浸润——她走在时间的另一面。', geoDescription: '南半球地中海气候分布于大陆西岸（智利中部、南非开普区、澳大利亚西南部），其季节与北半球完全相反。', distribution: '南半球地中海区（30°S-40°S）', cause: '副热带高压带（夏）与西风带（冬）交替，季节与北半球相反', characteristics: '夏干冬雨，季节与北半球相反', representative: '常绿硬叶林、桉树、橄榄', examPoints: ['气压带风带移动', '南半球地中海气候分布'] },
+        21: { spiritualPowerName: '大寒之灵', spiritualPowerMeaning: '泰加林在极寒中缓慢生长，年轮极窄极密——每一圈年轮都是对寒冷的一次确认，对时间的一次刻写。', geoDescription: '地处亚洲大陆腹地，冬季受强大的蒙古-西伯利亚高压控制，冷空气在此堆积并不断南下。', distribution: '西伯利亚（50°N-70°N）', cause: '深居内陆，受蒙古-西伯利亚高压控制', characteristics: '冬季-40℃以下，年较差>60℃', representative: '亚寒带针叶林（泰加林）', examPoints: ['大陆性气候特征', '蒙古高压'] },
+        22: { spiritualPowerName: '大漠之灵', spiritualPowerMeaning: '这里的土地在夏天可以灼热如烤，在冬天则冷冽如冰——温差如冰火交替，而在这冰火之间，是丝绸之路千年的驼铃。', geoDescription: '深居亚洲内陆，距海遥远，青藏高原抬升阻挡了来自印度洋的水汽。', distribution: '中国西北（35°N-45°N）', cause: '深居内陆，距海遥远 + 青藏高原阻挡', characteristics: '冬寒夏暑，温差巨大', representative: '温带草原/荒漠、胡杨', examPoints: ['青藏高原对气候的影响', '大陆性气候'] },
+        23: { spiritualPowerName: '风暴之灵', spiritualPowerMeaning: '北美大陆内部极端的温差与平原地形共同塑造了全球最密集的龙卷风带——平均每年超过1000次。', geoDescription: '地处落基山脉以东、阿巴拉契亚山脉以西，地势平坦开阔，来自北极的冷空气与来自墨西哥湾的暖湿气团在此剧烈交汇。', distribution: '北美中西部（35°N-50°N）', cause: '深居内陆 + 平原地形（冷暖气团交汇）', characteristics: '冬夏温差大，龙卷风频发', representative: '温带草原、麦田、野牛', examPoints: ['龙卷风成因', '北美地形对气候的影响'] },
+        24: { spiritualPowerName: '时间之灵', spiritualPowerMeaning: '冰芯中封存着过去80万年的地球气候记录——每一层冰、每一个气泡都记录着远古大气的成分、温度和二氧化碳浓度。', geoDescription: '极地高气压带控制，纬度极高，80%以上面积被永久冰盖覆盖，冰层平均厚度超过1500m。', distribution: '格陵兰（60°N-85°N）', cause: '极地高气压带 + 纬度高', characteristics: '全年均温<0℃，冰盖厚度>1500m', representative: '冰原、北极熊', examPoints: ['极地气候特征', '冰盖与海平面'] },
+        25: { spiritualPowerName: '解冻之灵', spiritualPowerMeaning: '在短暂的北极夏天（仅约6-8周），我唤醒苔原上每一朵云莓花、每一片苔藓和地衣——时间很短，所以花开得更用力。', geoDescription: '冬季漫长而黑暗，气温可低至-40℃；夏季短暂而明亮，极昼期间太阳24小时不落，冻土表层解冻。', distribution: '北极圈（65°N-75°N）', cause: '极地高气压带 + 纬度高', characteristics: '冬季漫长严寒，夏季短暂（6-8周）', representative: '苔原（苔藓、地衣、云莓）、驯鹿', examPoints: ['极地气候', '永久冻土与生态'] },
+        26: { spiritualPowerName: '天梯之灵', spiritualPowerMeaning: '站在世界最高的地方，我能够垂直穿越所有气候带——从终年积雪的山巅到冰川融水形成的河谷，所有气候带在我脚下垂直排列如阶梯。', geoDescription: '平均海拔超过4000m，形成源于印度板块与亚欧板块的碰撞挤压，至今仍在缓慢抬升。', distribution: '中国青藏高原（25°N-40°N）', cause: '海拔高（平均>4000m）+ 辐射强', characteristics: '气温随海拔升高降低，昼夜温差大', representative: '高山寒漠/草甸、牦牛', examPoints: ['垂直地带性', '青藏高原对亚洲气候的影响'] },
+        27: { spiritualPowerName: '蒸馏之灵', spiritualPowerMeaning: '我把夏日猛烈而持续的日照——地中海气候最慷慨的馈赠——浓缩成冬日餐桌上的温暖。', geoDescription: '夏季受副热带高压控制，炎热干燥；冬季受西风带控制，温和多雨，雨热不同期。', distribution: '地中海沿岸（30°N-45°N）', cause: '副热带高压带（夏）与西风带（冬）交替', characteristics: '夏干冬雨，雨热不同期', representative: '常绿硬叶林、橄榄、葡萄', examPoints: ['气压带风带移动', '地中海气候对农业的影响'] }
+    };
+    /* 将扩展数据完整嵌入每个角色对象 */
+    characters.forEach(c => {
+        const extra = charGeoData[c.id];
+        if (extra) Object.assign(c, extra);
+    });
+
+    /* ===== 首页动画流程 ===== */
+    setTimeout(() => {
+        document.getElementById('poetry').classList.add('show');
+    }, 500);
+    setTimeout(() => {
+        document.getElementById('overlay').classList.add('fade-out');
+        document.getElementById('landing-page').classList.add('show');
+    }, 10500);
+    setTimeout(() => {
+        document.getElementById('start-button-container').classList.add('show');
+    }, 12000);
+
+    /* 创建7处涟漪 */
+    function createRipples() {
+        const overlay = document.getElementById('overlay');
+        const positions = [
+            { x: 20, y: 30 }, { x: 80, y: 25 }, { x: 15, y: 70 },
+            { x: 85, y: 65 }, { x: 30, y: 80 }, { x: 70, y: 75 }, { x: 50, y: 20 }
+        ];
+        positions.forEach((pos, index) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = pos.x + '%';
+            ripple.style.top = pos.y + '%';
+            ripple.style.width = '100px';
+            ripple.style.height = '100px';
+            ripple.style.animationDelay = (index * 0.5) + 's';
+            overlay.appendChild(ripple);
+        });
+    }
+    createRipples();
+
+    /* ===== 开始按钮 ===== */
+    document.getElementById('startBtn').addEventListener('click', function() {
+        this.classList.add('clicked');
+        setTimeout(() => {
+            document.getElementById('landing-page').classList.add('hide');
+            document.getElementById('start-button-container').style.opacity = '0';
+            document.getElementById('start-button-container').style.pointerEvents = 'none';
+            setTimeout(() => {
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('main-page').classList.add('show');
+                createDots();
+            }, 1200);
+        }, 800);
+    });
+
+    /* ===== 创建27个交互圆点 ===== */
+    function createDots() {
+        const container = document.getElementById('dots-container');
+
+        characters.forEach(char => {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.color = char.color;
+            dot.style.left = char.position2.x + '%';
+            dot.style.top = char.position2.y + '%';
+            dot.dataset.id = char.id;
+
+            dot.addEventListener('mouseenter', function() {
+                this.classList.add('hover');
+                updateScroll(char);
+            });
+            dot.addEventListener('mouseleave', function() {
+                this.classList.remove('hover');
+            });
+            dot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+                showDetail(char);
+                updateScroll(char);
+            });
+
+            container.appendChild(dot);
+        });
+    }
+
+    /* ===== 更新卷轴文字 ===== */
+    function updateScroll(char) {
+        const scrollContent = document.getElementById('scrollContent');
+        scrollContent.style.opacity = '0';
+        setTimeout(() => {
+            scrollContent.innerHTML = `
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-name">${char.name}</div><div class="scroll-col-row scroll-col-name" style="font-size:13px;">${char.climate}</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-motto">"${char.motto}"</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-region">${char.region}</div><div class="scroll-col-row scroll-col-region" style="font-size:13px;">${char.country}</div></div>
+                <div class="scroll-divider"></div>
+                <div class="scroll-col"><div class="scroll-col-row scroll-col-hint">✦ 悬停探索</div><div class="scroll-col-row scroll-col-hint">点击了解详情</div></div>
+                <div class="scroll-divider"></div>
+            `;
+            scrollContent.style.opacity = '1';
+        }, 150);
+    }
+
+    /* ===== 显示详情卡片 ===== */
+    function showDetail(char) {
+        const overlay = document.getElementById('detailOverlay');
+        const card = document.getElementById('detailCard');
+        const content = document.getElementById('detailContent');
+        const portraitImg = document.getElementById('portraitImage');
+        const portraitLoading = document.getElementById('portraitLoading');
+
+        // 性格关键词拆分（按顿号/逗号/空格），取前 3 个
+        const personalityKws = (char.personality || '').split(/[·、,，\s]+/).filter(s => s).slice(0, 3);
+        const personalityHtml = personalityKws.map((kw, i) =>
+            `<span class="kw">${kw}</span>` + (i < personalityKws.length - 1 ? '<span class="dot-sep">●</span>' : '')
+        ).join('');
+
+        // 意象元素（圆点分隔，取 3-5 个）
+        const imageryList = (char.imagery || []).slice(0, 5);
+        const imageryHtml = imageryList.map((img, i) =>
+            `<span class="img-item">${img}</span>` + (i < imageryList.length - 1 ? '<span class="img-dot">●</span>' : '')
+        ).join('');
+
+        // 高考考点标签
+        const examTagsHtml = (char.examPoints || []).map(p => `<span class="exam-tag">${p}</span>`).join('');
+
+        content.innerHTML = `
+            <!-- ===== 第一折 · 灵性 ===== -->
+            <div class="detail-fold fold-1">
+                <div class="fold-title">灵 性<span class="gold-sheen-line"></span></div>
+                <div class="char-name-gold">${char.name}</div>
+                <div class="char-en-climate"><span class="en-name">${char.englishName}</span> · ${char.climate}</div>
+                <div class="char-lingyan">「${char.motto}」</div>
+                <div class="char-personality">${personalityHtml}</div>
+            </div>
+
+            <!-- ===== 第二折 · 灵力 ===== -->
+            <div class="detail-fold fold-2">
+                <div class="fold-title">灵 力<span class="gold-sheen-line"></span></div>
+                <div class="fold-content">
+                    <div class="fold-row"><span class="fold-label">灵力名称</span><span class="power-name">${char.spiritualPowerName || ''}</span></div>
+                    <div class="fold-row"><span class="fold-label">灵力释义</span><span class="fold-value">${char.spiritualPowerMeaning || ''}</span></div>
+                    <div class="fold-row"><span class="fold-label">地理对应</span></div>
+                    <div class="geo-correspond">${char.geoDescription || ''}</div>
+                    <div class="fold-row"><span class="fold-label">意象元素</span></div>
+                    <div class="imagery-line">${imageryHtml}</div>
+                </div>
+            </div>
+
+            <!-- ===== 第三折 · 血脉 ===== -->
+            <div class="detail-fold fold-3">
+                <div class="fold-title">血 脉<span class="gold-sheen-line"></span></div>
+                <div class="fold-content">
+                    <div class="blood-row"><span class="blood-label">父系家族 · 位置</span><span class="blood-value">${char.family} · ${char.position}（${char.region}）</span></div>
+                    <div class="blood-row"><span class="blood-label">母系温度家族</span><span class="blood-value">${char.temperatureFamily}</span></div>
+                    <div class="blood-row"><span class="blood-label">家族格言</span><span class="blood-value gold-motto">「${char.familyMotto}」</span></div>
+                    <div class="blood-row"><span class="blood-label">亲缘关系</span><span class="blood-value ink-light">${char.siblings}</span></div>
+                </div>
+            </div>
+
+            <!-- ===== 第四折 · 图鉴（新增） ===== -->
+            <div class="detail-fold fold-4">
+                <div class="fold-title">图 鉴<span class="gold-sheen-line"></span></div>
+                <div class="fold-content">
+                    <div class="archive-block">
+                        <div class="archive-sub-title">气候档案</div>
+                        <div class="archive-grid">
+                            <span class="a-label">分布</span><span class="a-value">${char.distribution || ''}</span>
+                            <span class="a-label">成因</span><span class="a-value">${char.cause || ''}</span>
+                            <span class="a-label">特征</span><span class="a-value">${char.characteristics || ''}</span>
+                            <span class="a-label">代表植被/动物</span><span class="a-value">${char.representative || ''}</span>
+                        </div>
+                    </div>
+                    <div class="archive-block">
+                        <div class="archive-sub-title">高考考点</div>
+                        <div class="exam-tags">${examTagsHtml}</div>
+                    </div>
+                    <div class="archive-block">
+                        <div class="archive-sub-title">地域文化彩蛋</div>
+                        <div class="easter-text">${char.easter || ''}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 画像加载
+        if (char.image) {
+            portraitLoading.classList.remove('hidden');
+            portraitImg.style.display = 'none';
+            portraitImg.classList.remove('reveal');
+            const img = new Image();
+            img.onload = function() {
+                portraitImg.src = char.image;
+                portraitImg.alt = char.name + ' · ' + (char.title || '');
+                portraitImg.style.display = 'block';
+                portraitLoading.classList.add('hidden');
+                // 触发显影动画
+                requestAnimationFrame(() => {
+                    portraitImg.classList.add('reveal');
+                });
+            };
+            img.src = char.image;
+            // 如果图片已缓存,onload 可能不触发,加一个兜底
+            if (img.complete) {
+                img.onload();
+            }
+        } else {
+            portraitImg.style.display = 'none';
+            portraitLoading.classList.remove('hidden');
+        }
+
+        overlay.classList.add('show');
+        card.classList.add('show');
+        // 滚动重置到顶部
+        card.scrollTop = 0;
+    }
+
+    /* ===== 关闭详情卡片 ===== */
+    function closeDetail() {
+        document.getElementById('detailOverlay').classList.remove('show');
+        document.getElementById('detailCard').classList.remove('show');
+        document.getElementById('portraitFullscreen').classList.remove('show');
+        document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+    }
+
+    document.getElementById('detailOverlay').addEventListener('click', closeDetail);
+
+    // 长按画像 2s 触发金色涟漪；单击触发放大查看
+    (function() {
+        const portraitFrame = document.getElementById('portraitFrame');
+        let pressTimer = null;
+        let isPressing = false;
+        let longPressTriggered = false;
+        function startPress(e) {
+            isPressing = true;
+            longPressTriggered = false;
+            pressTimer = setTimeout(() => {
+                if (!isPressing) return;
+                longPressTriggered = true;
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple-effect';
+                portraitFrame.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 1200);
+            }, 2000);
+        }
+        function endPress() {
+            isPressing = false;
+            if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        }
+        portraitFrame.addEventListener('mousedown', startPress);
+        portraitFrame.addEventListener('mouseup', endPress);
+        portraitFrame.addEventListener('mouseleave', endPress);
+        portraitFrame.addEventListener('touchstart', startPress);
+        portraitFrame.addEventListener('touchend', endPress);
+        // 单击触发画像放大查看（长按触发涟漪后不再弹出）
+        portraitFrame.addEventListener('click', () => {
+            if (longPressTriggered) { longPressTriggered = false; return; }
+            openPortraitFullscreen();
+        });
+    })();
+
+    /* ===== 画像放大查看（跳出牛皮纸 · 左侧 9:16 完整呈现） ===== */
+    function openPortraitFullscreen() {
+        const img = document.getElementById('portraitImage');
+        const fsImg = document.getElementById('portraitFullscreenImg');
+        const fs = document.getElementById('portraitFullscreen');
+        if (!img || !img.src) return;
+        fsImg.src = img.src;
+        fs.classList.add('show');
+    }
+    function closePortraitFullscreen() {
+        document.getElementById('portraitFullscreen').classList.remove('show');
+    }
+    // 点击任意处收起（图片本身、空白处均可）
+    document.getElementById('portraitFullscreen').addEventListener('click', closePortraitFullscreen);
+
+    /* ===== 导航按钮（其他4个敬请期待） ===== */
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.classList.contains('active')) {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                if (this.textContent !== '万象图') {
+                    showToast(this.textContent + ' · 敬请期待');
+                }
+            }
+        });
+    });
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    /* ===== 键盘 ESC 关闭（优先收起画像放大层） ===== */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const fs = document.getElementById('portraitFullscreen');
+            if (fs.classList.contains('show')) {
+                closePortraitFullscreen();
+            } else {
+                closeDetail();
+            }
+        }
+    });
+    </script>
+</body>
+</html>
