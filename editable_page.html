@@ -1353,6 +1353,166 @@
         /* 连接线注解文字 */
         .path-note { fill:#f0ece0; font-size:11px; opacity:0; transition:opacity 0.3s ease; pointer-events:none; font-family:var(--font-cn); }
 
+        /* ===== 罗盘页面（CLIMATERIA · 罗盘） ===== */
+        .compass-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+            background: radial-gradient(ellipse at 50% 45%, #0e1a2b 0%, #0a1420 60%, #05080f 100%);
+            position: relative;
+            z-index: 80;
+            overflow: hidden;
+        }
+        .compass-view.show { display: flex; }
+        /* 顶部说明栏（与谱系顶部栏同款质感） */
+        .compass-overview {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 28px;
+            border-bottom: 1px solid rgba(212,175,55,0.18);
+            background: rgba(10,17,40,0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 5;
+        }
+        .compass-overview-left { color:#f0ece0; font-size:13px; letter-spacing:2px; line-height:1.5; flex-shrink:0; }
+        .compass-overview-left span { color:#d4af37; font-size:12px; }
+        .compass-overview-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; flex:1; }
+        .compass-layer-tag {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 12px;
+            border:1px solid rgba(212,175,55,0.3);
+            border-radius:20px;
+            background:rgba(255,255,255,0.03);
+            color:#e8dcc8;
+            font-size:13px; letter-spacing:1px; cursor:pointer;
+            transition: all 0.3s ease; font-family:var(--font-cn);
+        }
+        .compass-layer-tag:hover { background:rgba(212,175,55,0.15); border-color:rgba(212,175,55,0.65); color:#fff; }
+        .compass-layer-tag.active { background:rgba(212,175,55,0.25); border-color:rgba(240,208,96,0.8); color:#fff; box-shadow:0 0 10px rgba(240,208,96,0.3); }
+        .compass-layer-tag .tag-dot { width:8px; height:8px; border-radius:50%; box-shadow:0 0 6px currentColor; flex-shrink:0; }
+        .compass-overview-right { color:#d4af37; font-size:13px; letter-spacing:2px; flex-shrink:0; min-width:150px; text-align:right; transition:color 0.3s ease; }
+        /* 中部主视图：星盘罗盘 */
+        .compass-stage {
+            flex:1; position:relative; overflow:hidden; background:transparent;
+            display:flex; align-items:stretch; justify-content:center;
+            cursor:grab;
+        }
+        .compass-stage.dragging { cursor:grabbing; }
+        #compassSvg { display:block; width:100%; height:100%; transform-origin:center center; transition:transform 0.2s ease; }
+        /* 罗盘环（金箔细线） */
+        .compass-ring { fill:none; stroke-width:1.2; opacity:0.85; }
+        .compass-ring-inner-glow { fill:none; stroke:rgba(240,208,96,0.10); stroke-width:6; }
+        .compass-tick { fill:#d4af37; opacity:0.55; }
+        /* 同层星轨连线 */
+        .compass-orbit { fill:none; stroke:rgba(240,208,96,0.22); stroke-width:0.5; stroke-dasharray:2 3; }
+        /* 节点 */
+        .compass-node-core { transition: r 0.3s ease, filter 0.3s ease; cursor:pointer; }
+        .compass-node-glow { transition: opacity 0.3s ease, r 0.3s ease; pointer-events:none; }
+        .compass-spoke { stroke:#f0d060; stroke-width:0.6; opacity:0; transition:opacity 0.25s ease; pointer-events:none; }
+        .compass-spoke.show { opacity:0.7; }
+        .compass-node-core.bloom { animation: compassBloom 0.7s ease-out; }
+        @keyframes compassBloom {
+            0% { filter: brightness(1); }
+            40% { filter: brightness(2.2) drop-shadow(0 0 14px #f0d060); }
+            100% { filter: brightness(1); }
+        }
+        /* 层高亮/变暗 */
+        .compass-layer { transition: opacity 0.4s ease; }
+        #compassDial.compass-dim .compass-layer:not(.compass-focus) { opacity:0.4; }
+        .compass-focus .compass-ring { filter: brightness(1.4) drop-shadow(0 0 6px rgba(240,208,96,0.6)); }
+        .compass-focus .compass-node-glow { opacity:0.5 !important; }
+        .compass-layer.lifted { animation: compassLift 0.8s ease-out; }
+        @keyframes compassLift {
+            0% { transform: translate(0,0); }
+            50% { transform: translate(0,-6px); }
+            100% { transform: translate(0,0); }
+        }
+        /* 跨层连线 */
+        .compass-crosslink { stroke:rgba(240,208,96,0.18); stroke-width:0.4; fill:none; transition: stroke 0.3s ease, stroke-width 0.3s ease; }
+        .compass-crosslink.hl { stroke:rgba(240,208,96,0.9); stroke-width:1; }
+        .compass-crosslink-label { fill:#f0ece0; font-size:11px; opacity:0; transition:opacity 0.3s ease; pointer-events:none; font-family:var(--font-cn); }
+        .compass-crosslink-label.show { opacity:1; }
+        /* 温度带名称 */
+        .compass-layer-label { fill:#f0ece0; font-size:14px; font-family:var(--font-cn); letter-spacing:3px; text-anchor:middle; filter: drop-shadow(0 0 4px rgba(240,208,96,0.45)); }
+        .compass-layer-sub { fill:#d4af37; font-size:9px; font-family:var(--font-en); text-anchor:middle; letter-spacing:1px; }
+        /* 中心光晕 */
+        .compass-core { fill:url(#compassCoreGlow); }
+        .compass-star { fill:#f0d060; }
+        /* 高山族悬浮 */
+        #compassAlpine { cursor:pointer; }
+        .compass-alpine-line { stroke:rgba(240,208,96,0.3); stroke-width:0.5; stroke-dasharray:3 4; fill:none; }
+        .compass-alpine-peak { stroke:#d4af37; stroke-width:0.8; }
+        .compass-alpine-label { fill:#f0ece0; font-size:13px; font-family:var(--font-cn); text-anchor:middle; letter-spacing:2px; }
+        /* 信息面板（点击温度带标签展开） */
+        .compass-panel {
+            position:absolute; top:50%; right:24px; transform:translateY(-50%) translateX(20px);
+            width:240px; max-height:62%;
+            background: rgba(10,17,40,0.85);
+            border:1px solid rgba(212,175,55,0.5);
+            border-radius:10px;
+            padding:16px 18px;
+            color:#f0ece0; font-family:var(--font-cn);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow:0 0 24px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(240,208,96,0.08);
+            opacity:0; pointer-events:none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index:6; overflow-y:auto;
+        }
+        .compass-panel.show { opacity:1; pointer-events:auto; transform:translateY(-50%) translateX(0); }
+        .compass-panel-title { font-size:18px; color:#f0d060; letter-spacing:3px; margin-bottom:4px; }
+        .compass-panel-range { font-size:12px; color:#d4af37; letter-spacing:1px; margin-bottom:10px; }
+        .compass-panel-desc { font-size:13px; line-height:1.7; color:#e8dcc8; margin-bottom:12px; }
+        .compass-panel-members { font-size:12px; line-height:1.8; color:#c8d0d8; }
+        .compass-panel-close { position:absolute; top:6px; right:10px; cursor:pointer; color:#d4af37; font-size:18px; line-height:1; }
+        /* 底部牛皮卷轴（与万象图/谱系视觉一致） */
+        .compass-scroll {
+            flex-shrink:0; height:120px;
+            background: url('底部牛皮纸（新）.webp') center center / 100% 100% no-repeat;
+            position:relative; z-index:90;
+            display:flex; align-items:center; justify-content:center;
+            overflow:hidden; border-top:1px solid rgba(212,175,55,0.2);
+        }
+        .compass-scroll::before {
+            content:''; position:absolute; inset:0;
+            background:
+                radial-gradient(ellipse at center, transparent 60%, rgba(20,10,5,0.15) 100%),
+                linear-gradient(180deg, rgba(40,25,10,0.05) 0%, transparent 30%, transparent 70%, rgba(40,25,10,0.08) 100%);
+            pointer-events:none;
+        }
+        .compass-scroll-content {
+            position:relative; z-index:2;
+            display:flex; align-items:center; justify-content:center; gap:0;
+            width:100%; padding:0 2%;
+            transition: opacity 0.3s ease; pointer-events:none;
+        }
+        .cscroll-col { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:8px 12px; }
+        .cscroll-row { font-family:var(--font-cn); font-weight:700; color:#3d1f08; letter-spacing:2px; text-shadow:0 1px 0 rgba(255,245,230,0.4); line-height:1.4; }
+        .cscroll-name { font-size:22px; }
+        .cscroll-motto { font-size:18px; font-style:italic; line-height:1.5; padding:0 6px; }
+        .cscroll-sub { font-size:15px; }
+        .cscroll-hint { font-size:14px; color:#5a3a1a; }
+        .cscroll-divider { width:1px; height:70%; flex-shrink:0;
+            background:linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.1) 15%, rgba(240,208,96,0.5) 50%, rgba(212,175,55,0.1) 85%, transparent 100%);
+            box-shadow:0 0 4px rgba(240,208,96,0.25); }
+        /* 罗盘移动端适配 */
+        @media (max-width: 768px) {
+            .compass-overview { padding: 8px 14px; }
+            .compass-overview-left { font-size:11px; }
+            .compass-overview-right { font-size:11px; min-width:0; }
+            .compass-layer-tag { font-size:11px; padding:3px 8px; }
+            .compass-scroll { height:118px; }
+            .cscroll-name { font-size:16px; }
+            .cscroll-motto { font-size:12px; }
+            .cscroll-sub { font-size:11px; }
+            .cscroll-hint { font-size:10px; }
+            .compass-panel { width:200px; right:12px; padding:12px 14px; }
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .navbar { padding: 0 16px; }
@@ -1522,6 +1682,39 @@
                     <div class="pscroll-divider"></div>
                     <div class="pscroll-col"><div class="pscroll-row pscroll-motto">从何而来</div></div>
                     <div class="pscroll-divider"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 罗盘视图（与 map-container/scroll-container/pedigreeView 并列，默认隐藏；navbar 共用） -->
+        <div class="compass-view" id="compassView">
+            <!-- 顶部说明栏 -->
+            <div class="compass-overview">
+                <div class="compass-overview-left">CLIMATERIA · 罗盘<br><span>温度带 · 气候之灵的星盘</span></div>
+                <div class="compass-overview-tags" id="compassLayerTags"></div>
+                <div class="compass-overview-right" id="compassOverviewRight">— 凝望温度的秩序 —</div>
+            </div>
+            <!-- 中部主视图：星盘罗盘（SVG 动态生成） -->
+            <div class="compass-stage" id="compassStage">
+                <svg id="compassSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div class="compass-panel" id="compassPanel">
+                    <span class="compass-panel-close" id="compassPanelClose">×</span>
+                    <div class="compass-panel-title" id="compassPanelTitle"></div>
+                    <div class="compass-panel-range" id="compassPanelRange"></div>
+                    <div class="compass-panel-desc" id="compassPanelDesc"></div>
+                    <div class="compass-panel-members" id="compassPanelMembers"></div>
+                </div>
+            </div>
+            <!-- 底部牛皮卷轴预览卡（视觉与万象图/谱系一致） -->
+            <div class="compass-scroll">
+                <div class="compass-scroll-content" id="compassScrollContent">
+                    <div class="cscroll-divider"></div>
+                    <div class="cscroll-col"><div class="cscroll-row cscroll-hint">将光标悬停于星盘之上</div><div class="cscroll-row cscroll-hint">探索气候的温度秩序</div></div>
+                    <div class="cscroll-divider"></div>
+                    <div class="cscroll-col"><div class="cscroll-row cscroll-name">CLIMATERIA</div><div class="cscroll-row cscroll-sub">罗 盘</div></div>
+                    <div class="cscroll-divider"></div>
+                    <div class="cscroll-col"><div class="cscroll-row cscroll-motto">温度的秩序</div></div>
+                    <div class="cscroll-divider"></div>
                 </div>
             </div>
         </div>
@@ -1928,7 +2121,7 @@
     // 点击任意处收起（图片本身、空白处均可）
     document.getElementById('portraitFullscreen').addEventListener('click', closePortraitFullscreen);
 
-    /* ===== 导航按钮（万象图 / 谱系 互斥切换；其余敬请期待） ===== */
+    /* ===== 导航按钮（万象图 / 谱系 / 罗盘 互斥切换；其余敬请期待） ===== */
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const name = this.textContent.trim();
@@ -1939,6 +2132,8 @@
                 switchToView('pedigree');
             } else if (name === '万象图') {
                 switchToView('map');
+            } else if (name === '罗盘') {
+                switchToView('compass');
             } else {
                 showToast(name + ' · 敬请期待');
             }
@@ -1988,22 +2183,36 @@
         return t;
     }
 
-    /* ===== 视图切换：万象图 ⇄ 谱系 ===== */
+    /* ===== 视图切换：万象图 ⇄ 谱系 ⇄ 罗盘 ===== */
     function switchToView(view){
         const map = document.querySelector('.map-container');
         const mapScroll = document.querySelector('#main-page > .scroll-container');
         const ped = document.getElementById('pedigreeView');
+        const cmp = document.getElementById('compassView');
         if (view === 'pedigree') {
             map.style.display = 'none';
             mapScroll.style.display = 'none';
+            cmp.classList.remove('show');
             ped.classList.add('show');
             if (!pedigreeBuilt) { buildPedigree(); pedigreeBuilt = true; }
             else { fitPedigreeSvg(); }
             setTimeout(triggerGrowth, 80);
+        } else if (view === 'compass') {
+            map.style.display = 'none';
+            mapScroll.style.display = 'none';
+            ped.classList.remove('show');
+            cmp.classList.add('show');
+            if (!compassBuilt) {
+                buildCompass();
+                compassBuilt = true;
+                bindCompassInteractions();
+                if (!compassRaf) compassTick();
+            }
         } else {
             map.style.display = '';
             mapScroll.style.display = '';
             ped.classList.remove('show');
+            cmp.classList.remove('show');
         }
     }
 
@@ -2150,8 +2359,18 @@
             trunkNode.addEventListener('mouseenter', ()=> {
                 if (!focusedFamily){ updatePedigreeScrollFamily(fam); document.getElementById('overviewRight').textContent = fam.family; }
             });
-            // 家族名标签
-            const fLabel = svgText(fam.emoji+' '+fam.family, trunkX, trunkY-30, fam.color, 13, 'middle');
+            // 家族名标签：自创简笔画图标 + 家族名（与顶部标签栏图标一致）
+            const iconScale = 0.9;
+            const iconW = 24 * iconScale;
+            const labelText = fam.family;
+            const labelFont = 13;
+            // 估算文字宽度（中文约 font-size 宽），用于居中 图标+文字 组合
+            const textW = labelText.length * labelFont;
+            const totalW = iconW + 4 + textW;
+            const startX = trunkX - totalW/2;
+            const iconG = familyIconSvgGroup(fam.family, startX, trunkY - 30 - iconW/2, iconScale, fam.color);
+            g.appendChild(iconG);
+            const fLabel = svgText(labelText, startX + iconW + 4, trunkY - 30 + labelFont/3, fam.color, labelFont, 'start');
             g.appendChild(fLabel);
 
             // 成员分脉 + 星辰之果节点：成员在家族主节点下方纵向展开
@@ -2291,17 +2510,45 @@
 
     /* ===== 顶部家族标签按钮 ===== */
     // 家族自创简笔画图标（24x24 viewBox，单色描边线条，非现成 emoji）
-    const familyIcons = {
-        '雨林家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 21 C12 16 8 12 4 11 C5 15 7 18 12 21Z"/><path d="M12 21 C12 16 16 12 20 11 C19 15 17 18 12 21Z"/><line x1="12" y1="21" x2="12" y2="9"/><path d="M12 9 C10 6 8 5 6 5 C7 7 9 8 12 9Z"/><path d="M12 9 C14 6 16 5 18 5 C17 7 15 8 12 9Z"/></svg>',
-        '季风家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 9 C6 6 9 6 12 9 C15 12 18 12 21 9"/><path d="M3 14 C6 11 9 11 12 14 C15 17 18 17 21 14"/><path d="M3 19 C6 16 9 16 12 19"/></svg>',
-        '草原家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 21 L12 8"/><path d="M12 8 C10 6 8 6 7 7 C8 8 10 9 12 9"/><path d="M12 9 C14 7 16 7 17 8 C16 9 14 10 12 10"/><path d="M12 12 C10 10 8 10 7 11 C8 12 10 13 12 13"/><path d="M12 13 C14 11 16 11 17 12 C16 13 14 14 12 14"/></svg>',
-        '干旱家': '<svg class="tag-icon" viewBox="0 0 24 24"><circle cx="18" cy="6" r="2.5"/><path d="M3 18 C6 14 9 14 12 18 C15 22 18 22 21 18"/></svg>',
-        '西风家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 7 C7 7 9 7 12 7 C14 7 15 5 13 4"/><path d="M3 12 C8 12 11 12 14 12 C16 12 17 10 15 9"/><path d="M3 17 C7 17 10 17 13 17 C15 17 16 15 14 14"/></svg>',
-        '大陆家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 18 L8 9 L12 14 L16 7 L21 18 Z"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
-        '寒冰家': '<svg class="tag-icon" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="7.5" x2="20" y2="16.5"/><line x1="4" y1="16.5" x2="20" y2="7.5"/><path d="M12 3 L10 5 M12 3 L14 5"/><path d="M12 21 L10 19 M12 21 L14 19"/></svg>',
-        '高山家': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M3 19 L9 7 L13 13 L16 9 L21 19 Z"/><path d="M7 11 L9 7 L11 11"/></svg>',
-        '孤独者': '<svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 4 L13.5 10 L20 11 L13.5 12 L12 18 L10.5 12 L4 11 L10.5 10 Z"/></svg>'
+    // 结构化数据：同时供 HTML 标签栏（内联 SVG）与谱系树干（SVG 内 <g>）使用
+    const familyIconPaths = {
+        '雨林家': [{t:'path',d:'M12 21 C12 16 8 12 4 11 C5 15 7 18 12 21Z'},{t:'path',d:'M12 21 C12 16 16 12 20 11 C19 15 17 18 12 21Z'},{t:'line',x1:12,y1:21,x2:12,y2:9},{t:'path',d:'M12 9 C10 6 8 5 6 5 C7 7 9 8 12 9Z'},{t:'path',d:'M12 9 C14 6 16 5 18 5 C17 7 15 8 12 9Z'}],
+        '季风家': [{t:'path',d:'M3 9 C6 6 9 6 12 9 C15 12 18 12 21 9'},{t:'path',d:'M3 14 C6 11 9 11 12 14 C15 17 18 17 21 14'},{t:'path',d:'M3 19 C6 16 9 16 12 19'}],
+        '草原家': [{t:'path',d:'M12 21 L12 8'},{t:'path',d:'M12 8 C10 6 8 6 7 7 C8 8 10 9 12 9'},{t:'path',d:'M12 9 C14 7 16 7 17 8 C16 9 14 10 12 10'},{t:'path',d:'M12 12 C10 10 8 10 7 11 C8 12 10 13 12 13'},{t:'path',d:'M12 13 C14 11 16 11 17 12 C16 13 14 14 12 14'}],
+        '干旱家': [{t:'circle',cx:18,cy:6,r:2.5},{t:'path',d:'M3 18 C6 14 9 14 12 18 C15 22 18 22 21 18'}],
+        '西风家': [{t:'path',d:'M3 7 C7 7 9 7 12 7 C14 7 15 5 13 4'},{t:'path',d:'M3 12 C8 12 11 12 14 12 C16 12 17 10 15 9'},{t:'path',d:'M3 17 C7 17 10 17 13 17 C15 17 16 15 14 14'}],
+        '大陆家': [{t:'path',d:'M3 18 L8 9 L12 14 L16 7 L21 18 Z'},{t:'line',x1:3,y1:18,x2:21,y2:18}],
+        '寒冰家': [{t:'line',x1:12,y1:3,x2:12,y2:21},{t:'line',x1:4,y1:7.5,x2:20,y2:16.5},{t:'line',x1:4,y1:16.5,x2:20,y2:7.5},{t:'path',d:'M12 3 L10 5 M12 3 L14 5'},{t:'path',d:'M12 21 L10 19 M12 21 L14 19'}],
+        '高山家': [{t:'path',d:'M3 19 L9 7 L13 13 L16 9 L21 19 Z'},{t:'path',d:'M7 11 L9 7 L11 11'}],
+        '孤独者': [{t:'path',d:'M12 4 L13.5 10 L20 11 L13.5 12 L12 18 L10.5 12 L4 11 L10.5 10 Z'}]
     };
+    // 生成 HTML 内联 SVG（供顶部标签栏）
+    function familyIconHtml(family){
+        const paths = familyIconPaths[family]; if (!paths) return '';
+        let inner = '';
+        paths.forEach(p => {
+            if (p.t==='path') inner += `<path d="${p.d}"/>`;
+            else if (p.t==='line') inner += `<line x1="${p.x1}" y1="${p.y1}" x2="${p.x2}" y2="${p.y2}"/>`;
+            else if (p.t==='circle') inner += `<circle cx="${p.cx}" cy="${p.cy}" r="${p.r}"/>`;
+        });
+        return `<svg class="tag-icon" viewBox="0 0 24 24">${inner}</svg>`;
+    }
+    // 在已有 SVG 中生成图标 <g>（供谱系树干标签），坐标系 24x24 缩放到目标尺寸
+    function familyIconSvgGroup(family, x, y, scale, color){
+        const g = svgEl('g');
+        g.setAttribute('transform', `translate(${x},${y}) scale(${scale})`);
+        g.setAttribute('stroke', color); g.setAttribute('stroke-width', 1.6/scale);
+        g.setAttribute('fill', 'none'); g.setAttribute('stroke-linecap','round'); g.setAttribute('stroke-linejoin','round');
+        const paths = familyIconPaths[family]; if (!paths) return g;
+        paths.forEach(p => {
+            const el = svgEl(p.t);
+            if (p.t==='path') el.setAttribute('d', p.d);
+            else if (p.t==='line'){ el.setAttribute('x1',p.x1); el.setAttribute('y1',p.y1); el.setAttribute('x2',p.x2); el.setAttribute('y2',p.y2); }
+            else if (p.t==='circle'){ el.setAttribute('cx',p.cx); el.setAttribute('cy',p.cy); el.setAttribute('r',p.r); el.setAttribute('fill',color); el.setAttribute('stroke','none'); }
+            g.appendChild(el);
+        });
+        return g;
+    }
     function buildFamilyTags(families){
         const box = document.getElementById('familyTags');
         box.innerHTML = '';
@@ -2309,7 +2556,7 @@
             const b = document.createElement('button');
             b.className = 'family-tag';
             b.style.color = fam.color;
-            const icon = familyIcons[fam.family] || '';
+            const icon = familyIconHtml(fam.family);
             b.innerHTML = `${icon}<span style="color:#e8dcc8;">${fam.family}</span>`;
             b.addEventListener('mouseenter', ()=> { if (!focusedFamily) hoverFamily(fam); });
             b.addEventListener('mouseleave', ()=> { if (!focusedFamily) unhoverFamily(); });
@@ -2480,7 +2727,7 @@
         setTimeout(()=> {
             box.innerHTML = `
                 <div class="pscroll-divider"></div>
-                <div class="pscroll-col"><div class="pscroll-row pscroll-name">${fam.emoji} ${fam.family}</div><div class="pscroll-row pscroll-sub">${fam.members.length}位气候之灵</div></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-name"><span style="display:inline-flex;vertical-align:middle;color:${fam.color};">${familyIconHtml(fam.family)}</span> ${fam.family}</div><div class="pscroll-row pscroll-sub">${fam.members.length}位气候之灵</div></div>
                 <div class="pscroll-divider"></div>
                 <div class="pscroll-col"><div class="pscroll-row pscroll-motto">「${fam.motto}」</div></div>
                 <div class="pscroll-divider"></div>
@@ -2523,6 +2770,564 @@
 
     // 窗口尺寸变化时重新适配谱系画布
     window.addEventListener('resize', ()=> { if (pedigreeBuilt) fitPedigreeSvg(); });
+
+    /* ============================================================
+       罗盘页面：CLIMATERIA · 温度带星盘（SVG 动态生成 + 旋转/拖拽/缩放）
+       按「温度带」分组（与 characters.family 9大家族是不同维度），
+       用角色的 name 匹配 characters 中的对象，复用 showDetail(char)。
+    ============================================================ */
+    // 温度带分组数据（热带=最内层，寒带=最外层；高山族悬浮于右上角）
+    const compassData = {
+        layers: [
+            { id:'tropical', name:'热带族', temperatureRange:'25-30°C', description:'终年高温，四季不分明，赤道低气压带与信风带交替控制', color:'#c49a3c',
+              members:['雅拉','阿莎','苏丽','薇薇安','巴霍','顾澜','凯瑞','莱依姆','卡里姆','瓦拉','巴特尔','帕查','塔拉'] },
+            { id:'subtropical', name:'亚热带族', temperatureRange:'15-25°C', description:'夏季高温多雨，冬季温和少雨，海陆热力差异显著', color:'#2d6b4f',
+              members:['林和音','咏熙'] },
+            { id:'temperate', name:'温带族', temperatureRange:'5-20°C', description:'四季分明，年温差大，受西风带与大陆性气候交替影响', color:'#1a3a5c',
+              members:['伊莱拉','西尔维','瑟西拉','维塔','沈寒川','列昂','伊塔卡'] },
+            { id:'cold', name:'寒带族', temperatureRange:'-40-5°C', description:'终年寒冷，极昼极夜交替，极地高压控制', color:'#8a9aaa',
+              members:['纳努克','索尔维格'] }
+        ],
+        floating: { id:'alpine', name:'高山族', temperatureRange:'随海拔变化', description:'海拔高于4000m，垂直地带性显著，亚洲水塔', color:'#5a7a6a',
+            members:['江铮'] },
+        connections: [
+            { from:'伊塔卡', to:'瑟西拉', label:'镜像气候·南北半球' },
+            { from:'林和音', to:'咏熙', label:'东西季风·跨洋呼应' },
+            { from:'伊莱拉', to:'西尔维', label:'西风双翼·大陆两岸' },
+            { from:'维塔', to:'沈寒川', to2:'列昂', label:'北境三兄·大陆性之链' }
+        ]
+    };
+
+    // 各温度层同心圆半径（从内到外）；层间距约 65px
+    const COMPASS_RADII = [110, 175, 240, 305];
+
+    // 罗盘运行状态
+    let compassBuilt = false;          // 是否已构建（懒构建：首次切入罗盘时构建）
+    let compassRaf = null;             // 自转动画句柄
+    let compassRotation = 0;           // 当前罗盘旋转角度（度）
+    let compassStarRotation = 0;       // 星点背景旋转角度（度，极慢）
+    const compassBaseSpeed = 0.08;     // 默认自转速度（度/帧）≈75 秒一周
+    let compassCurrentSpeed = 0.08;    // 当前实际自转速度（向目标平滑过渡）
+    let compassTargetSpeed = 0.08;     // 目标自转速度（悬停时减慢）
+    let compassInertiaV = 0;           // 拖拽松手后的惯性速度（衰减至 0）
+    let compassScale = 1;              // 缩放比例 0.8-1.3
+    let compassDragging = false;       // 是否正在拖拽
+    let focusedLayer = null;           // 当前聚焦的温度层 id
+    let panelOpenLayer = null;         // 当前展开信息面板的温度层 id
+    let compassScrollToken = 0;        // 卷轴更新令牌（防抖，避免快速切换闪烁）
+
+    // 按 name 在 characters 中查找角色对象
+    function findCharByName(name){
+        return characters.find(c => c.name === name);
+    }
+
+    /* ===== 卷轴内容更新（带令牌防抖） ===== */
+    function setCompassScroll(html){
+        const token = ++compassScrollToken;
+        const box = document.getElementById('compassScrollContent');
+        if (!box) return;
+        box.style.opacity = '0';
+        setTimeout(()=>{ if (token !== compassScrollToken) return; box.innerHTML = html; box.style.opacity = '1'; }, 120);
+    }
+    function updateCompassScrollLayer(layer){
+        const members = layer.members.join(' · ');
+        setCompassScroll(`
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-name">${layer.name}</div><div class="cscroll-row cscroll-sub">${layer.members.length}位 · ${layer.temperatureRange}</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-motto">「${layer.description}」</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-sub">${members}</div></div>
+            <div class="cscroll-divider"></div>`);
+    }
+    function updateCompassScrollChar(ch){
+        const motto = (ch.motto || '').slice(0, 22);
+        setCompassScroll(`
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-name">${ch.name}</div><div class="cscroll-row cscroll-sub">${ch.title || ''}</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-motto">「${motto}…」</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-sub">${ch.temperatureFamily || ''} · ${ch.family || ''}</div></div>
+            <div class="cscroll-divider"></div>`);
+    }
+    function resetCompassScroll(){
+        setCompassScroll(`
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-hint">将光标悬停于星盘之上</div><div class="cscroll-row cscroll-hint">探索气候的温度秩序</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-name">CLIMATERIA</div><div class="cscroll-row cscroll-sub">罗 盘</div></div>
+            <div class="cscroll-divider"></div>
+            <div class="cscroll-col"><div class="cscroll-row cscroll-motto">温度的秩序</div></div>
+            <div class="cscroll-divider"></div>`);
+    }
+
+    /* ===== 层聚焦 / 取消聚焦 ===== */
+    function focusLayer(layerId){
+        focusedLayer = layerId;
+        const dial = document.getElementById('compassDial');
+        if (!dial) return;
+        // 高山族不在 dial 内，聚焦时不暗化其他层
+        if (layerId === 'alpine'){
+            dial.classList.remove('compass-dim');
+            dial.querySelectorAll('.compass-layer').forEach(lg => lg.classList.remove('compass-focus'));
+        } else {
+            dial.classList.add('compass-dim');
+            dial.querySelectorAll('.compass-layer').forEach(lg => lg.classList.toggle('compass-focus', lg.dataset.layer === layerId));
+        }
+        const layer = compassData.layers.find(l=>l.id===layerId) || (compassData.floating.id===layerId?compassData.floating:null);
+        const or = document.getElementById('compassOverviewRight');
+        if (layer && or) or.textContent = `— ${layer.name} · ${layer.members.length}灵 —`;
+    }
+    function unfocusAllLayers(){
+        focusedLayer = null;
+        const dial = document.getElementById('compassDial');
+        if (dial){ dial.classList.remove('compass-dim'); dial.querySelectorAll('.compass-layer').forEach(lg => lg.classList.remove('compass-focus')); }
+        const or = document.getElementById('compassOverviewRight');
+        if (or) or.textContent = '— 凝望温度的秩序 —';
+    }
+    // 长按节点：所在层环短暂凸起
+    function liftLayer(layerId){
+        const lg = document.querySelector(`.compass-layer[data-layer="${layerId}"]`);
+        if (!lg) return;
+        lg.classList.add('lifted');
+        setTimeout(()=>lg.classList.remove('lifted'), 800);
+    }
+
+    /* ===== 信息面板展开 / 收起 ===== */
+    function openCompassPanel(layer){
+        panelOpenLayer = layer.id;
+        document.getElementById('compassPanelTitle').textContent = layer.name;
+        document.getElementById('compassPanelRange').textContent = '温度范围：' + layer.temperatureRange;
+        document.getElementById('compassPanelDesc').textContent = layer.description;
+        const chs = layer.members.map(n => findCharByName(n)).filter(Boolean);
+        document.getElementById('compassPanelMembers').innerHTML = chs.map(c => `<div>· ${c.name} <span style="color:#8a98a8;">${c.title||''}</span></div>`).join('');
+        document.getElementById('compassPanel').classList.add('show');
+        document.querySelectorAll('.compass-layer-tag').forEach(t => t.classList.toggle('active', t.dataset.layer === layer.id));
+    }
+    function closeCompassPanel(){
+        panelOpenLayer = null;
+        const p = document.getElementById('compassPanel');
+        if (p) p.classList.remove('show');
+        document.querySelectorAll('.compass-layer-tag').forEach(t => t.classList.remove('active'));
+    }
+
+    /* ===== 构建顶部温度带标签 ===== */
+    function buildCompassLayerTags(){
+        const box = document.getElementById('compassLayerTags');
+        if (!box) return;
+        box.innerHTML = '';
+        const all = compassData.layers.concat([compassData.floating]);
+        all.forEach(layer => {
+            const tag = document.createElement('span');
+            tag.className = 'compass-layer-tag';
+            tag.dataset.layer = layer.id;
+            tag.innerHTML = `<span class="tag-dot" style="background:${layer.color};color:${layer.color};"></span>${layer.name}`;
+            tag.addEventListener('click', ()=>{
+                if (panelOpenLayer === layer.id){ closeCompassPanel(); unfocusAllLayers(); resetCompassScroll(); }
+                else { focusLayer(layer.id); openCompassPanel(layer); updateCompassScrollLayer(layer); }
+            });
+            tag.addEventListener('mouseenter', ()=>{ focusLayer(layer.id); updateCompassScrollLayer(layer); });
+            tag.addEventListener('mouseleave', ()=>{ if (!panelOpenLayer){ unfocusAllLayers(); resetCompassScroll(); } });
+            box.appendChild(tag);
+        });
+    }
+
+    /* ===== 构建高山族悬浮节点（不参与旋转，固定于右上角） ===== */
+    function buildAlpine(svg){
+        const al = compassData.floating;
+        const ax = 430, ay = -235;
+        const g = svgEl('g'); g.id = 'compassAlpine';
+        // 罗盘外环右上点（45°）到山峰的极细金线
+        const linkR = COMPASS_RADII[COMPASS_RADII.length-1] + 18;
+        const line = svgEl('line');
+        line.setAttribute('x1', (linkR * Math.cos(-Math.PI/4)).toFixed(2));
+        line.setAttribute('y1', (linkR * Math.sin(-Math.PI/4)).toFixed(2));
+        line.setAttribute('x2', ax - 18); line.setAttribute('y2', ay + 12);
+        line.setAttribute('class','compass-alpine-line');
+        g.appendChild(line);
+        // 双峰简笔山峰
+        const peak = svgEl('path');
+        peak.setAttribute('d', `M ${ax-32} ${ay+26} L ${ax-8} ${ay-16} L ${ax+5} ${ay+4} L ${ax+22} ${ay-26} L ${ax+42} ${ay+26} Z`);
+        peak.setAttribute('fill','url(#alpineGrad)');
+        peak.setAttribute('class','compass-alpine-peak');
+        g.appendChild(peak);
+        // 雪顶
+        const snow = svgEl('path');
+        snow.setAttribute('d', `M ${ax-8} ${ay-16} L ${ax-15} ${ay-2} L ${ax-1} ${ay-2} Z M ${ax+22} ${ay-26} L ${ax+14} ${ay-8} L ${ax+30} ${ay-8} Z`);
+        snow.setAttribute('fill','#f0ece0'); snow.setAttribute('opacity','0.85');
+        g.appendChild(snow);
+        // 江铮节点（置于主峰顶）
+        const ch = findCharByName(al.members[0]);
+        if (ch){
+            const nx = ax + 22, ny = ay - 26;
+            const glow = svgEl('circle');
+            glow.setAttribute('cx', nx); glow.setAttribute('cy', ny);
+            glow.setAttribute('r', 12); glow.setAttribute('fill', ch.color); glow.setAttribute('opacity','0.25');
+            glow.setAttribute('class','compass-node-glow');
+            const node = svgEl('circle');
+            node.setAttribute('cx', nx); node.setAttribute('cy', ny);
+            node.setAttribute('r', 5.5); node.setAttribute('fill', ch.color);
+            node.setAttribute('stroke','#f0d060'); node.setAttribute('stroke-width','1');
+            node.setAttribute('class','compass-node-core');
+            node.style.filter = `drop-shadow(0 0 5px ${ch.color})`;
+            node.addEventListener('mouseenter', ()=>{ glow.setAttribute('r',20); glow.setAttribute('opacity','0.5'); updateCompassScrollChar(ch); });
+            node.addEventListener('mouseleave', ()=>{ glow.setAttribute('r',12); glow.setAttribute('opacity','0.25'); });
+            node.addEventListener('click', (e)=>{ e.stopPropagation(); node.classList.add('bloom'); setTimeout(()=>node.classList.remove('bloom'),700); showDetail(ch); });
+            g.appendChild(glow); g.appendChild(node);
+        }
+        // 标签
+        const label = svgEl('text');
+        label.setAttribute('x', ax + 5); label.setAttribute('y', ay + 50);
+        label.setAttribute('class','compass-alpine-label');
+        label.textContent = al.name;
+        g.appendChild(label);
+        const sub = svgEl('text');
+        sub.setAttribute('x', ax + 5); sub.setAttribute('y', ay + 63);
+        sub.setAttribute('class','compass-layer-sub');
+        sub.textContent = al.temperatureRange;
+        g.appendChild(sub);
+        svg.appendChild(g);
+    }
+
+    /* ===== 构建罗盘主体 ===== */
+    function buildCompass(){
+        const svg = document.getElementById('compassSvg');
+        svg.setAttribute('viewBox', '-560 -345 1120 690');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.innerHTML = '';
+
+        // <defs>：金箔渐变 / 中心光晕 / 山峰渐变
+        const defs = svgEl('defs');
+        defs.innerHTML = `
+            <linearGradient id="compassGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#d4af37"/>
+                <stop offset="50%" stop-color="#f0d060"/>
+                <stop offset="100%" stop-color="#b8942a"/>
+            </linearGradient>
+            <radialGradient id="compassCoreGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(240,208,96,0.55)"/>
+                <stop offset="40%" stop-color="rgba(240,208,96,0.18)"/>
+                <stop offset="100%" stop-color="rgba(240,208,96,0)"/>
+            </radialGradient>
+            <radialGradient id="alpineGrad" cx="50%" cy="75%" r="65%">
+                <stop offset="0%" stop-color="#a8c0b0"/>
+                <stop offset="100%" stop-color="#5a7a6a"/>
+            </radialGradient>`;
+        svg.appendChild(defs);
+
+        // 星点背景层（不随罗盘旋转，独立极慢自转）
+        const stars = svgEl('g'); stars.id = 'compassStarsLayer';
+        for (let i = 0; i < 90; i++){
+            const s = svgEl('circle');
+            s.setAttribute('cx', (Math.random()*1120 - 560).toFixed(1));
+            s.setAttribute('cy', (Math.random()*690 - 345).toFixed(1));
+            s.setAttribute('r', (Math.random()*1.1 + 0.3).toFixed(2));
+            s.setAttribute('class','compass-star');
+            s.setAttribute('opacity', (Math.random()*0.35 + 0.08).toFixed(2));
+            stars.appendChild(s);
+        }
+        svg.appendChild(stars);
+
+        // 中心光晕（不旋转）
+        const core = svgEl('circle');
+        core.setAttribute('cx',0); core.setAttribute('cy',0); core.setAttribute('r', 72);
+        core.setAttribute('class','compass-core');
+        svg.appendChild(core);
+        const coreDot = svgEl('circle');
+        coreDot.setAttribute('cx',0); coreDot.setAttribute('cy',0); coreDot.setAttribute('r', 4);
+        coreDot.setAttribute('fill','#f0d060'); coreDot.setAttribute('opacity','0.85');
+        svg.appendChild(coreDot);
+
+        // 背景命中矩形（捕获空白区域 hover → 取消聚焦/复位卷轴）
+        const bg = svgEl('rect');
+        bg.setAttribute('x',-600); bg.setAttribute('y',-400);
+        bg.setAttribute('width',1200); bg.setAttribute('height',800);
+        bg.setAttribute('fill','transparent');
+        bg.addEventListener('mouseenter', ()=>{ if (focusedLayer){ unfocusAllLayers(); resetCompassScroll(); } });
+        svg.appendChild(bg);
+
+        // 罗盘主体（旋转 group：环 + 刻度 + 节点 + 同层星轨 + 跨层连线 + 温度带名称）
+        const dial = svgEl('g'); dial.id = 'compassDial';
+
+        // 节点坐标索引：name -> {x,y}，供跨层连线查询
+        const nodeIndex = {};
+
+        compassData.layers.forEach((layer, idx) => {
+            const r = COMPASS_RADII[idx];
+            const lg = svgEl('g');
+            lg.setAttribute('class','compass-layer');
+            lg.setAttribute('data-layer', layer.id);
+
+            // 内侧辉光 + 主环（金箔细线，层间色温过渡用 layer.color 调）
+            const innerGlow = svgEl('circle');
+            innerGlow.setAttribute('cx',0); innerGlow.setAttribute('cy',0); innerGlow.setAttribute('r', r);
+            innerGlow.setAttribute('class','compass-ring-inner-glow');
+            lg.appendChild(innerGlow);
+            const ring = svgEl('circle');
+            ring.setAttribute('cx',0); ring.setAttribute('cy',0); ring.setAttribute('r', r);
+            ring.setAttribute('class','compass-ring');
+            ring.setAttribute('stroke', layer.color);
+            lg.appendChild(ring);
+
+            // 刻度小点（每层 36 个，仪器感）
+            const tickCount = 36;
+            for (let t = 0; t < tickCount; t++){
+                const a = (t / tickCount) * Math.PI * 2;
+                const tk = svgEl('circle');
+                tk.setAttribute('cx', (Math.cos(a) * r).toFixed(2));
+                tk.setAttribute('cy', (Math.sin(a) * r).toFixed(2));
+                tk.setAttribute('r', 1.1);
+                tk.setAttribute('class','compass-tick');
+                lg.appendChild(tk);
+            }
+
+            // 节点位置（沿圆周均匀分布，从顶部开始）
+            const members = layer.members.map(n => findCharByName(n)).filter(Boolean);
+            const positions = members.map((c, j) => {
+                const a = (j / members.length) * Math.PI * 2 - Math.PI / 2;
+                return { char: c, angle: a, x: Math.cos(a) * r, y: Math.sin(a) * r };
+            });
+            positions.forEach(p => { nodeIndex[p.char.name] = p; });
+
+            // 同层星轨连线（节点成环）
+            if (positions.length > 1){
+                const orbit = svgEl('path');
+                let d = `M ${positions[0].x.toFixed(2)} ${positions[0].y.toFixed(2)}`;
+                for (let p = 1; p < positions.length; p++) d += ` L ${positions[p].x.toFixed(2)} ${positions[p].y.toFixed(2)}`;
+                d += ' Z';
+                orbit.setAttribute('d', d);
+                orbit.setAttribute('class','compass-orbit');
+                lg.appendChild(orbit);
+            }
+
+            // 节点（外光晕 + 内核 + 到中心的细线）
+            positions.forEach(p => {
+                const ng = svgEl('g'); ng.setAttribute('class','compass-node');
+                const glow = svgEl('circle');
+                glow.setAttribute('cx', p.x.toFixed(2)); glow.setAttribute('cy', p.y.toFixed(2));
+                glow.setAttribute('r', 12); glow.setAttribute('fill', p.char.color); glow.setAttribute('opacity','0.25');
+                glow.setAttribute('class','compass-node-glow');
+                ng.appendChild(glow);
+                const core2 = svgEl('circle');
+                core2.setAttribute('cx', p.x.toFixed(2)); core2.setAttribute('cy', p.y.toFixed(2));
+                core2.setAttribute('r', 5.5); core2.setAttribute('fill', p.char.color);
+                core2.setAttribute('class','compass-node-core');
+                core2.setAttribute('stroke','#f0d060'); core2.setAttribute('stroke-width','1');
+                core2.style.filter = `drop-shadow(0 0 4px ${p.char.color})`;
+                ng.appendChild(core2);
+                const spoke = svgEl('line');
+                spoke.setAttribute('x1', p.x.toFixed(2)); spoke.setAttribute('y1', p.y.toFixed(2));
+                spoke.setAttribute('x2', 0); spoke.setAttribute('y2', 0);
+                spoke.setAttribute('class','compass-spoke');
+                ng.appendChild(spoke);
+
+                ng.dataset.layerId = layer.id;
+                // 悬停：光晕扩大 + 中心细线 + 卷轴显示角色信息
+                ng.addEventListener('mouseenter', ()=>{
+                    glow.setAttribute('r', 22); glow.setAttribute('opacity','0.55');
+                    spoke.classList.add('show');
+                    focusLayer(layer.id);
+                    updateCompassScrollChar(p.char);
+                });
+                ng.addEventListener('mouseleave', ()=>{
+                    glow.setAttribute('r', 12); glow.setAttribute('opacity','0.25');
+                    spoke.classList.remove('show');
+                });
+                // 点击：节点绽放 + 调用现有 showDetail(char)
+                ng.addEventListener('click', (e)=>{
+                    e.stopPropagation();
+                    core2.classList.add('bloom');
+                    setTimeout(()=>core2.classList.remove('bloom'), 700);
+                    showDetail(p.char);
+                });
+                // 长按 2s：所在层环凸起
+                let pressTimer = null, pressing = false;
+                const startPress = ()=>{ pressing = true; pressTimer = setTimeout(()=>{ if (pressing) liftLayer(layer.id); }, 2000); };
+                const endPress = ()=>{ pressing = false; if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+                ng.addEventListener('mousedown', startPress);
+                ng.addEventListener('mouseup', endPress);
+                ng.addEventListener('mouseleave', endPress);
+                ng.addEventListener('touchstart', startPress, {passive:true});
+                ng.addEventListener('touchend', endPress);
+                lg.appendChild(ng);
+            });
+
+            // 温度带名称 + 温度范围（环外侧顶部，跟随罗盘旋转，更有星盘感）
+            const labelR = r + 22;
+            const label = svgEl('text');
+            label.setAttribute('x', 0); label.setAttribute('y', (-labelR).toFixed(2));
+            label.setAttribute('class','compass-layer-label');
+            label.textContent = layer.name;
+            lg.appendChild(label);
+            const sub = svgEl('text');
+            sub.setAttribute('x', 0); sub.setAttribute('y', (-labelR + 13).toFixed(2));
+            sub.setAttribute('class','compass-layer-sub');
+            sub.textContent = layer.temperatureRange;
+            lg.appendChild(sub);
+
+            // 环 / 名称悬停：聚焦该层 + 卷轴显示温度带简介
+            const onLayerEnter = ()=>{ focusLayer(layer.id); updateCompassScrollLayer(layer); };
+            ring.addEventListener('mouseenter', onLayerEnter);
+            label.addEventListener('mouseenter', onLayerEnter);
+            sub.addEventListener('mouseenter', onLayerEnter);
+
+            dial.appendChild(lg);
+        });
+
+        // 跨层（含三节点）连线
+        const cl = svgEl('g'); cl.id = 'compassCrossLinks';
+        compassData.connections.forEach(cn => {
+            const from = nodeIndex[cn.from];
+            const to = nodeIndex[cn.to];
+            const to2 = cn.to2 ? nodeIndex[cn.to2] : null;
+            if (!from || !to) return;
+            const path = svgEl('path');
+            let d = `M ${from.x.toFixed(2)} ${from.y.toFixed(2)} L ${to.x.toFixed(2)} ${to.y.toFixed(2)}`;
+            if (to2) d += ` L ${to2.x.toFixed(2)} ${to2.y.toFixed(2)}`;
+            path.setAttribute('d', d);
+            path.setAttribute('class','compass-crosslink');
+            // 标注文字（取首段中点）
+            const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+            const lbl = svgEl('text');
+            lbl.setAttribute('x', mx.toFixed(2)); lbl.setAttribute('y', (my - 6).toFixed(2));
+            lbl.setAttribute('class','compass-crosslink-label');
+            lbl.setAttribute('text-anchor','middle');
+            lbl.textContent = cn.label;
+            path.addEventListener('mouseenter', ()=>{ path.classList.add('hl'); lbl.classList.add('show'); });
+            path.addEventListener('mouseleave', ()=>{ path.classList.remove('hl'); lbl.classList.remove('show'); });
+            cl.appendChild(path); cl.appendChild(lbl);
+        });
+        dial.appendChild(cl);
+
+        svg.appendChild(dial);
+
+        // 高山族悬浮（不旋转）
+        buildAlpine(svg);
+
+        // 顶部温度带标签
+        buildCompassLayerTags();
+
+        // 初始角度，让构图略有偏转更自然
+        compassRotation = -8;
+    }
+
+    /* ===== 自转 + 惯性 + 星点缓慢自转（rAF 驱动） ===== */
+    function compassTick(){
+        // 拖拽惯性衰减
+        compassInertiaV *= 0.92;
+        if (Math.abs(compassInertiaV) < 0.005) compassInertiaV = 0;
+        // 自转速度向目标平滑过渡
+        compassCurrentSpeed += (compassTargetSpeed - compassCurrentSpeed) * 0.05;
+        compassRotation += compassCurrentSpeed + compassInertiaV;
+        compassRotation = ((compassRotation % 360) + 360) % 360;
+        const dial = document.getElementById('compassDial');
+        if (dial) dial.setAttribute('transform', `rotate(${compassRotation.toFixed(3)})`);
+        // 星点背景极慢反向自转
+        compassStarRotation += 0.012;
+        const stars = document.getElementById('compassStarsLayer');
+        if (stars) stars.setAttribute('transform', `rotate(${compassStarRotation.toFixed(3)})`);
+        compassRaf = requestAnimationFrame(compassTick);
+    }
+
+    /* ===== 舞台交互：悬停减速 / 拖拽旋转 / 滚轮缩放 / 双击复位 ===== */
+    function bindCompassInteractions(){
+        const stage = document.getElementById('compassStage');
+        const svg = document.getElementById('compassSvg');
+        let lastAngle = 0, lastT = 0, vel = 0;
+
+        // 鼠标相对罗盘中心的角度
+        const angleAt = (cx, cy) => Math.atan2(cy, cx) * 180 / Math.PI;
+        const mouseAngle = (e) => {
+            const rect = svg.getBoundingClientRect();
+            return angleAt(e.clientX - (rect.left + rect.width/2), e.clientY - (rect.top + rect.height/2));
+        };
+
+        // 悬停减速
+        stage.addEventListener('mouseenter', ()=>{ if (!compassDragging) compassTargetSpeed = compassBaseSpeed * 0.3; });
+        stage.addEventListener('mouseleave', ()=>{ compassTargetSpeed = compassBaseSpeed; });
+
+        // 拖拽旋转（点中信息面板时不触发）
+        stage.addEventListener('mousedown', (e)=>{
+            if (e.target.closest('#compassPanel')) return;
+            compassDragging = true;
+            stage.classList.add('dragging');
+            lastAngle = mouseAngle(e); lastT = performance.now(); vel = 0;
+            compassTargetSpeed = 0; compassInertiaV = 0;
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e)=>{
+            if (!compassDragging) return;
+            const a = mouseAngle(e);
+            let delta = a - lastAngle;
+            if (delta > 180) delta -= 360; else if (delta < -180) delta += 360;
+            compassRotation += delta;
+            const now = performance.now();
+            const dt = Math.max(1, now - lastT);
+            vel = delta / dt * 16; // 归一到每帧 ~16ms
+            lastAngle = a; lastT = now;
+        });
+        window.addEventListener('mouseup', ()=>{
+            if (!compassDragging) return;
+            compassDragging = false;
+            stage.classList.remove('dragging');
+            compassInertiaV = Math.max(-15, Math.min(15, vel));
+            compassTargetSpeed = compassBaseSpeed * 0.3; // 松手后保持悬停减速状态
+        });
+
+        // 触屏拖拽
+        const touchAngle = (t) => {
+            const rect = svg.getBoundingClientRect();
+            return angleAt(t.clientX - (rect.left + rect.width/2), t.clientY - (rect.top + rect.height/2));
+        };
+        stage.addEventListener('touchstart', (e)=>{
+            if (e.touches.length !== 1) return;
+            if (e.target.closest('#compassPanel')) return;
+            compassDragging = true;
+            lastAngle = touchAngle(e.touches[0]); lastT = performance.now(); vel = 0;
+            compassTargetSpeed = 0; compassInertiaV = 0;
+        }, {passive:true});
+        stage.addEventListener('touchmove', (e)=>{
+            if (!compassDragging || e.touches.length !== 1) return;
+            const a = touchAngle(e.touches[0]);
+            let delta = a - lastAngle;
+            if (delta > 180) delta -= 360; else if (delta < -180) delta += 360;
+            compassRotation += delta;
+            const now = performance.now();
+            const dt = Math.max(1, now - lastT);
+            vel = delta / dt * 16;
+            lastAngle = a; lastT = now;
+        }, {passive:true});
+        stage.addEventListener('touchend', ()=>{
+            if (!compassDragging) return;
+            compassDragging = false;
+            compassInertiaV = Math.max(-15, Math.min(15, vel));
+            compassTargetSpeed = compassBaseSpeed * 0.3;
+        });
+
+        // 滚轮缩放 80%-130%
+        stage.addEventListener('wheel', (e)=>{
+            e.preventDefault();
+            let s = compassScale + (e.deltaY < 0 ? 0.05 : -0.05);
+            s = Math.max(0.8, Math.min(1.3, s));
+            compassScale = s;
+            svg.style.transform = `scale(${s})`;
+        }, {passive:false});
+
+        // 双击空白：复位角度 + 缩放 + 速度
+        stage.addEventListener('dblclick', (e)=>{
+            if (e.target === stage || e.target === svg){
+                compassRotation = 0; compassScale = 1;
+                compassInertiaV = 0; compassTargetSpeed = compassBaseSpeed;
+                svg.style.transform = 'scale(1)';
+                closeCompassPanel(); unfocusAllLayers(); resetCompassScroll();
+            }
+        });
+
+        // 信息面板关闭按钮
+        const closeBtn = document.getElementById('compassPanelClose');
+        if (closeBtn) closeBtn.addEventListener('click', ()=>{ closeCompassPanel(); unfocusAllLayers(); resetCompassScroll(); });
+    }
     </script>
 </body>
 </html>
