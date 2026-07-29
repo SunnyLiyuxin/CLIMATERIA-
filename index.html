@@ -1597,6 +1597,7 @@
 
     /* ===== 显示详情卡片 ===== */
     function showDetail(char) {
+        showDetail._requestId = (showDetail._requestId || 0);
         const overlay = document.getElementById('detailOverlay');
         const card = document.getElementById('detailCard');
         const content = document.getElementById('detailContent');
@@ -1677,13 +1678,16 @@
             </div>
         `;
 
-        // 画像加载
+        // 画像加载（带竞态保护：防止快速切换时旧请求覆盖新图片）
         if (char.image) {
+            const thisRequestId = ++showDetail._requestId;
             portraitLoading.classList.remove('hidden');
             portraitImg.style.display = 'none';
             portraitImg.classList.remove('reveal');
             const img = new Image();
             img.onload = function() {
+                // 竞态守卫：如果期间已切换到其他人物，丢弃本次回调
+                if (showDetail._requestId !== thisRequestId) return;
                 portraitImg.src = char.image;
                 portraitImg.alt = char.name + ' · ' + (char.title || '');
                 portraitImg.style.display = 'block';
@@ -1711,6 +1715,8 @@
 
     /* ===== 关闭详情卡片 ===== */
     function closeDetail() {
+        // 使任何进行中的画像加载回调失效
+        if (typeof showDetail !== 'undefined') showDetail._requestId = (showDetail._requestId || 0) + 1;
         document.getElementById('detailOverlay').classList.remove('show');
         document.getElementById('detailCard').classList.remove('show');
         document.getElementById('portraitFullscreen').classList.remove('show');
