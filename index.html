@@ -1236,6 +1236,120 @@
             transition: filter 0.1s ease;
         }
 
+        /* ===== 谱系视图（与世界树） ===== */
+        .pedigree-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+            background: radial-gradient(ellipse at 38% 42%, #1a2a3a 0%, #0e1a2b 68%, #0a1128 100%);
+            position: relative;
+            z-index: 80;
+            overflow: hidden;
+        }
+        .pedigree-view.show { display: flex; }
+        /* 顶部总览栏 */
+        .pedigree-overview {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 28px;
+            border-bottom: 1px solid rgba(212,175,55,0.18);
+            background: rgba(10,17,40,0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 5;
+        }
+        .overview-left {
+            color: #f0ece0;
+            font-size: 13px;
+            letter-spacing: 2px;
+            line-height: 1.5;
+            flex-shrink: 0;
+        }
+        .overview-left span { color: #d4af37; font-size: 12px; }
+        .overview-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; flex: 1; }
+        .family-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px;
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            color: #e8dcc8;
+            font-size: 13px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-cn);
+        }
+        .family-tag:hover { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.65); color:#fff; }
+        .family-tag .tag-dot { width:8px; height:8px; border-radius:50%; box-shadow:0 0 6px currentColor; flex-shrink:0; }
+        .overview-right {
+            color:#d4af37; font-size:13px; letter-spacing:2px; flex-shrink:0; min-width:150px; text-align:right;
+            transition: color 0.3s ease;
+        }
+        /* 中部主视图 */
+        .pedigree-stage {
+            flex: 1;
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212,175,55,0.5) transparent;
+        }
+        .pedigree-stage::-webkit-scrollbar { height: 8px; }
+        .pedigree-stage::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.4); border-radius:4px; }
+        .pedigree-stage::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        #pedigreeSvg { display:block; height:100%; transform-origin: left center; transition: transform 0.2s ease; }
+        /* 节点呼吸 */
+        .pnode-core { transition: filter 0.3s ease; }
+        @keyframes pglow { 0%,100%{opacity:0.18;} 50%{opacity:0.42;} }
+        /* 底部牛皮卷轴（与万象图视觉一致） */
+        .pedigree-scroll {
+            flex-shrink:0;
+            height:150px;
+            background: url('底部牛皮纸（新）.webp') center center / 100% 100% no-repeat;
+            position:relative;
+            z-index:90;
+            display:flex; align-items:center; justify-content:center;
+            overflow:hidden;
+            border-top:1px solid rgba(212,175,55,0.2);
+        }
+        .pedigree-scroll::before {
+            content:''; position:absolute; inset:0;
+            background:
+                radial-gradient(ellipse at center, transparent 60%, rgba(20,10,5,0.15) 100%),
+                linear-gradient(180deg, rgba(40,25,10,0.05) 0%, transparent 30%, transparent 70%, rgba(40,25,10,0.08) 100%);
+            pointer-events:none;
+        }
+        .pedigree-scroll-content {
+            position:relative; z-index:2;
+            display:flex; align-items:center; justify-content:center; gap:0;
+            width:100%; padding:0 2%;
+            transition: opacity 0.3s ease;
+            pointer-events:none;
+        }
+        .pscroll-col { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:8px 12px; }
+        .pscroll-row { font-family:var(--font-cn); font-weight:700; color:#3d1f08; letter-spacing:2px; text-shadow:0 1px 0 rgba(255,245,230,0.4); line-height:1.4; }
+        .pscroll-name { font-size:22px; }
+        .pscroll-motto { font-size:18px; font-style:italic; line-height:1.5; padding:0 6px; }
+        .pscroll-sub { font-size:15px; }
+        .pscroll-hint { font-size:14px; color:#5a3a1a; }
+        .pscroll-divider { width:1px; height:70%; flex-shrink:0;
+            background:linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.1) 15%, rgba(240,208,96,0.5) 50%, rgba(212,175,55,0.1) 85%, transparent 100%);
+            box-shadow:0 0 4px rgba(240,208,96,0.25); }
+        /* 高亮/变暗 */
+        .fam-group { transition: opacity 0.4s ease; }
+        #familiesLayer.pedigree-dim .fam-group:not(.fam-focus) { opacity:0.35; }
+        .fam-focus .trunk-path, .fam-focus .branch-path { filter: brightness(1.4) drop-shadow(0 0 6px rgba(240,208,96,0.6)); }
+        .fam-focus .pnode-glow-outer { opacity:0.5 !important; }
+        .particle { fill:#f0d060; }
+        /* 连接线注解文字 */
+        .path-note { fill:#f0ece0; font-size:11px; opacity:0; transition:opacity 0.3s ease; pointer-events:none; font-family:var(--font-cn); }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .navbar { padding: 0 16px; }
@@ -1269,6 +1383,17 @@
             .exam-tag { font-size: 14px; }
             .easter-text { font-size: 16px; }
             .dot { width: 14px; height: 14px; }
+            /* 谱系移动端 */
+            .pedigree-overview { flex-wrap:wrap; padding:8px 12px; gap:8px; }
+            .overview-left { font-size:11px; flex:1 1 100%; text-align:center; }
+            .overview-right { font-size:11px; min-width:0; flex:1 1 100%; text-align:center; }
+            .overview-tags { gap:5px; }
+            .family-tag { font-size:11px; padding:3px 8px; }
+            .pedigree-scroll { height:118px; }
+            .pscroll-name { font-size:16px; }
+            .pscroll-motto { font-size:12px; }
+            .pscroll-sub { font-size:11px; }
+            .pscroll-hint { font-size:10px; }
         }
     </style>
 <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
@@ -1369,6 +1494,32 @@
                 <div class="scroll-divider"></div>
                 <div class="scroll-col"><div class="scroll-col-row scroll-col-hint">悬停·点击<br>阅读每一缕风</div></div>
                 <div class="scroll-divider"></div>
+            </div>
+        </div>
+
+        <!-- 谱系视图（与 map-container/scroll-container 并列，默认隐藏；navbar 保持原位共用） -->
+        <div class="pedigree-view" id="pedigreeView">
+            <!-- 顶部总览栏 -->
+            <div class="pedigree-overview">
+                <div class="overview-left">9大家族 × 27位灵性存在<br><span>大地之母 · 气候之灵</span></div>
+                <div class="overview-tags" id="familyTags"></div>
+                <div class="overview-right" id="overviewRight">— 凝望整棵世界树 —</div>
+            </div>
+            <!-- 中部主视图：星树谱系（SVG 横向长卷） -->
+            <div class="pedigree-stage" id="pedigreeStage">
+                <svg id="pedigreeSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+            <!-- 底部牛皮卷轴预览卡（视觉与万象图卷轴一致） -->
+            <div class="pedigree-scroll">
+                <div class="pedigree-scroll-content" id="pedigreeScrollContent">
+                    <div class="pscroll-divider"></div>
+                    <div class="pscroll-col"><div class="pscroll-row pscroll-hint">将光标悬停于谱系之上</div><div class="pscroll-row pscroll-hint">阅读气候之灵的血脉</div></div>
+                    <div class="pscroll-divider"></div>
+                    <div class="pscroll-col"><div class="pscroll-row pscroll-name">CLIMATERIA</div><div class="pscroll-row pscroll-sub">谱 系</div></div>
+                    <div class="pscroll-divider"></div>
+                    <div class="pscroll-col"><div class="pscroll-row pscroll-motto">从何而来</div></div>
+                    <div class="pscroll-divider"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1774,15 +1925,19 @@
     // 点击任意处收起（图片本身、空白处均可）
     document.getElementById('portraitFullscreen').addEventListener('click', closePortraitFullscreen);
 
-    /* ===== 导航按钮（其他4个敬请期待） ===== */
+    /* ===== 导航按钮（万象图 / 谱系 互斥切换；其余敬请期待） ===== */
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            if (!this.classList.contains('active')) {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                if (this.textContent !== '万象图') {
-                    showToast(this.textContent + ' · 敬请期待');
-                }
+            const name = this.textContent.trim();
+            if (this.classList.contains('active')) return;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (name === '谱系') {
+                switchToView('pedigree');
+            } else if (name === '万象图') {
+                switchToView('map');
+            } else {
+                showToast(name + ' · 敬请期待');
             }
         });
     });
@@ -1805,6 +1960,557 @@
             }
         }
     });
+    /* ============================================================
+       谱系页面：CLIMATERIA 世界树（SVG 动态生成 + 交互）
+       按 characters 的 family 字段动态分组，不硬编码角色列表。
+       复用全局 showDetail(char) 弹出详情卡片，与万象图一致。
+    ============================================================ */
+    let pedigreeBuilt = false;     // 是否已构建（懒构建：首次切入谱系时构建）
+    let focusedFamily = null;      // 当前聚焦的家族（点击标签锁定）
+    let currentZoom = 1;           // 缩放比例 0.8-1.2
+    let pedRaf = null;             // 粒子动画句柄
+    let pedParticles = [];         // 粒子状态列表
+    const PED_W = 3200, PED_H = 720;                  // SVG 画布逻辑尺寸
+    const familyOrder = ['雨林家','季风家','草原家','干旱家','西风家','大陆家','寒冰家','高山家','孤独者'];
+
+    // —— SVG 元素工具 ——
+    function svgEl(tag){ return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+    function svgText(text, x, y, fill, size, anchor){
+        const t = svgEl('text');
+        t.setAttribute('x', x); t.setAttribute('y', y);
+        t.setAttribute('fill', fill); t.setAttribute('font-size', size);
+        t.setAttribute('font-family', getComputedStyle(document.documentElement).getPropertyValue('--font-cn') || 'serif');
+        if (anchor) t.setAttribute('text-anchor', anchor);
+        t.textContent = text;
+        return t;
+    }
+
+    /* ===== 视图切换：万象图 ⇄ 谱系 ===== */
+    function switchToView(view){
+        const map = document.querySelector('.map-container');
+        const mapScroll = document.querySelector('#main-page > .scroll-container');
+        const ped = document.getElementById('pedigreeView');
+        if (view === 'pedigree') {
+            map.style.display = 'none';
+            mapScroll.style.display = 'none';
+            ped.classList.add('show');
+            if (!pedigreeBuilt) { buildPedigree(); pedigreeBuilt = true; }
+            else { fitPedigreeSvg(); }
+            setTimeout(triggerGrowth, 80);
+        } else {
+            map.style.display = '';
+            mapScroll.style.display = '';
+            ped.classList.remove('show');
+        }
+    }
+
+    /* ===== 构建世界树 ===== */
+    function buildPedigree(){
+        // 1) 按 family 动态分组
+        const groupMap = {};
+        characters.forEach(c => {
+            if (!groupMap[c.family]) groupMap[c.family] = {
+                family: c.family, emoji: c.familyEmoji, color: c.color, motto: c.familyMotto, members: []
+            };
+            groupMap[c.family].members.push(c);
+        });
+        const families = familyOrder.map(f => groupMap[f]).filter(Boolean);
+        const svg = document.getElementById('pedigreeSvg');
+        svg.setAttribute('viewBox', `0 0 ${PED_W} ${PED_H}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.innerHTML = '';
+
+        // <defs>：树冠辉光 + 根部辉光渐变
+        const defs = svgEl('defs');
+        defs.innerHTML = `
+            <radialGradient id="crownGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(212,175,55,0.05)"/>
+                <stop offset="70%" stop-color="rgba(212,175,55,0.02)"/>
+                <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+            </radialGradient>
+            <radialGradient id="rootGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="35%" stop-color="#f0e8d0"/>
+                <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+            </radialGradient>`;
+        svg.appendChild(defs);
+
+        // 树冠辉光层
+        const crown = svgEl('ellipse');
+        crown.setAttribute('cx', PED_W*0.5); crown.setAttribute('cy', PED_H*0.5);
+        crown.setAttribute('rx', PED_W*0.5); crown.setAttribute('ry', PED_H*0.55);
+        crown.setAttribute('fill', 'url(#crownGlow)');
+        svg.appendChild(crown);
+
+        // 背景星点（比万象图更稀疏安静）
+        const starG = svgEl('g');
+        for (let i=0;i<95;i++){
+            const s = svgEl('circle');
+            s.setAttribute('cx', Math.random()*PED_W);
+            s.setAttribute('cy', Math.random()*PED_H);
+            s.setAttribute('r', (Math.random()*0.9+0.3).toFixed(2));
+            s.setAttribute('fill','#f0d060');
+            s.setAttribute('opacity', (Math.random()*0.3+0.05).toFixed(2));
+            starG.appendChild(s);
+        }
+        svg.appendChild(starG);
+
+        // 根部（大地之母·气候之灵）：最亮的金色源头
+        const rootX = 150, rootY = PED_H/2;
+        const rootGlow = svgEl('circle');
+        rootGlow.setAttribute('cx',rootX); rootGlow.setAttribute('cy',rootY);
+        rootGlow.setAttribute('r',75); rootGlow.setAttribute('fill','url(#rootGlow)');
+        svg.appendChild(rootGlow);
+        // 根部脉冲圈（能量向外输送）
+        const rootRing = svgEl('circle');
+        rootRing.setAttribute('cx',rootX); rootRing.setAttribute('cy',rootY);
+        rootRing.setAttribute('r',24); rootRing.setAttribute('fill','none');
+        rootRing.setAttribute('stroke','#f0d060'); rootRing.setAttribute('stroke-width','1.2');
+        rootRing.setAttribute('opacity','0.6');
+        rootRing.innerHTML = '<animate attributeName="r" values="24;62;24" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite"/>';
+        svg.appendChild(rootRing);
+        const rootCore = svgEl('circle');
+        rootCore.setAttribute('cx',rootX); rootCore.setAttribute('cy',rootY);
+        rootCore.setAttribute('r',15); rootCore.setAttribute('fill','#fff8e0');
+        rootCore.setAttribute('class','pnode-core');
+        rootCore.style.filter = 'drop-shadow(0 0 14px #f0e8d0)';
+        svg.appendChild(rootCore);
+        svg.appendChild(svgText('大地之母', rootX, rootY+54, '#f0ece0', 13, 'middle'));
+        svg.appendChild(svgText('气候之灵', rootX, rootY+72, '#d4af37', 11, 'middle'));
+
+        // 家族主脉 + 成员分脉
+        const trunkX0 = 760, trunkDX = 270;
+        pedParticles = [];
+        const familiesLayer = svgEl('g');
+        familiesLayer.setAttribute('id','familiesLayer');
+        svg.appendChild(familiesLayer);
+
+        families.forEach((fam, i) => {
+            const trunkX = trunkX0 + i*trunkDX;
+            const trunkY = PED_H/2 + Math.sin(i*1.0)*88;
+            fam._trunkX = trunkX; fam._trunkY = trunkY;
+
+            const g = svgEl('g');
+            g.setAttribute('class','fam-group');
+            g.setAttribute('data-family', fam.family);
+            g.style.color = fam.color;
+
+            // 主脉：根部 → 家族主节点（三次贝塞尔，金箔贴金质感）
+            const cp1x = rootX + (trunkX-rootX)*0.4, cp1y = rootY;
+            const cp2x = trunkX - (trunkX-rootX)*0.35, cp2y = trunkY;
+            const d = `M ${rootX} ${rootY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${trunkX} ${trunkY}`;
+            const trunkPath = svgEl('path');
+            trunkPath.setAttribute('d', d);
+            trunkPath.setAttribute('stroke', fam.color);
+            trunkPath.setAttribute('stroke-width','2.8');
+            trunkPath.setAttribute('fill','none');
+            trunkPath.setAttribute('stroke-linecap','round');
+            trunkPath.setAttribute('opacity','0.85');
+            trunkPath.setAttribute('class','trunk-path');
+            const trunkGold = svgEl('path');
+            trunkGold.setAttribute('d', d);
+            trunkGold.setAttribute('stroke','#f0d060');
+            trunkGold.setAttribute('stroke-width','1');
+            trunkGold.setAttribute('fill','none');
+            trunkGold.setAttribute('stroke-linecap','round');
+            trunkGold.setAttribute('opacity','0.5');
+            trunkGold.setAttribute('class','trunk-gold');
+            g.appendChild(trunkPath); g.appendChild(trunkGold);
+
+            // 主脉注解（悬停连线点亮，浮现家族格言）
+            const note = svgText('「'+ (fam.motto||fam.family), (rootX+trunkX)/2, (rootY+trunkY)/2 - 10, '#f0ece0', 11, 'middle');
+            note.setAttribute('class','path-note');
+            g.appendChild(note);
+            trunkPath.addEventListener('mouseenter', ()=> {
+                note.classList.add('show');
+                if (!focusedFamily){ updatePedigreeScrollFamily(fam); document.getElementById('overviewRight').textContent = fam.family; }
+            });
+            trunkPath.addEventListener('mouseleave', ()=> note.classList.remove('show'));
+
+            // 家族主节点（呼吸的光）
+            const trunkNode = svgEl('circle');
+            trunkNode.setAttribute('cx',trunkX); trunkNode.setAttribute('cy',trunkY);
+            trunkNode.setAttribute('r',9); trunkNode.setAttribute('fill', fam.color);
+            trunkNode.setAttribute('class','pnode-core');
+            trunkNode.style.filter = `drop-shadow(0 0 10px ${fam.color}) drop-shadow(0 0 18px #d4af37)`;
+            const trunkOuter = svgEl('circle');
+            trunkOuter.setAttribute('cx',trunkX); trunkOuter.setAttribute('cy',trunkY);
+            trunkOuter.setAttribute('r',26); trunkOuter.setAttribute('fill','none');
+            trunkOuter.setAttribute('stroke', fam.color); trunkOuter.setAttribute('stroke-width','0.6');
+            trunkOuter.setAttribute('opacity','0.25');
+            trunkOuter.setAttribute('class','pnode-glow-outer');
+            g.appendChild(trunkOuter); g.appendChild(trunkNode);
+            trunkNode.addEventListener('mouseenter', ()=> {
+                if (!focusedFamily){ updatePedigreeScrollFamily(fam); document.getElementById('overviewRight').textContent = fam.family; }
+            });
+            // 家族名标签
+            const fLabel = svgText(fam.emoji+' '+fam.family, trunkX, trunkY-30, fam.color, 13, 'middle');
+            g.appendChild(fLabel);
+
+            // 成员分脉 + 星辰之果节点
+            const n = fam.members.length;
+            const c = (n-1)/2;
+            fam.members.forEach((ch, j) => {
+                const mx = trunkX + 165 + Math.abs(j-c)*10;
+                const my = trunkY + (j-c)*50;
+                // 分脉（自然弯曲如藤蔓）
+                const bcp1x = trunkX+90, bcp1y = trunkY;
+                const bcp2x = mx-70, bcp2y = my;
+                const bd = `M ${trunkX} ${trunkY} C ${bcp1x} ${bcp1y}, ${bcp2x} ${bcp2y}, ${mx} ${my}`;
+                const bp = svgEl('path');
+                bp.setAttribute('d', bd);
+                bp.setAttribute('stroke', fam.color);
+                bp.setAttribute('stroke-width','1.6');
+                bp.setAttribute('fill','none'); bp.setAttribute('stroke-linecap','round');
+                bp.setAttribute('opacity','0.6'); bp.setAttribute('class','branch-path');
+                const bpGold = svgEl('path');
+                bpGold.setAttribute('d', bd);
+                bpGold.setAttribute('stroke','#f0d060');
+                bpGold.setAttribute('stroke-width','0.6');
+                bpGold.setAttribute('fill','none'); bpGold.setAttribute('opacity','0.4');
+                g.appendChild(bp); g.appendChild(bpGold);
+                // 分脉注解（角色位置：长女·长姐 等）
+                const bnote = svgText(ch.position || '', (trunkX+mx)/2, (trunkY+my)/2 - 6, '#f0ece0', 10, 'middle');
+                bnote.setAttribute('class','path-note');
+                g.appendChild(bnote);
+                bp.addEventListener('mouseenter', ()=> bnote.classList.add('show'));
+                bp.addEventListener('mouseleave', ()=> bnote.classList.remove('show'));
+
+                // 角色节点（星辰之果）：外晕 + 内晕(呼吸) + 核心
+                const ng = svgEl('g'); ng.setAttribute('class','pnode-char'); ng.style.cursor='pointer';
+                const outer = svgEl('circle');
+                outer.setAttribute('cx',mx); outer.setAttribute('cy',my); outer.setAttribute('r',50);
+                outer.setAttribute('fill', fam.color); outer.setAttribute('opacity','0.06');
+                outer.setAttribute('class','pnode-glow-outer');
+                const inner = svgEl('circle');
+                inner.setAttribute('cx',mx); inner.setAttribute('cy',my); inner.setAttribute('r',30);
+                inner.setAttribute('fill', fam.color); inner.setAttribute('opacity','0.2');
+                inner.setAttribute('class','pnode-glow-inner');
+                // 每颗节点独立呼吸节奏（不同步，像星空而非灯阵）
+                const dur = (2.8 + Math.random()*0.8).toFixed(2);
+                const delay = (Math.random()*3).toFixed(2);
+                inner.style.animation = `pglow ${dur}s ease-in-out ${delay}s infinite`;
+                const rr = 7 + Math.random()*1.5;
+                const core = svgEl('circle');
+                core.setAttribute('cx',mx); core.setAttribute('cy',my);
+                core.setAttribute('r', rr.toFixed(1)); core.setAttribute('fill', fam.color);
+                core.setAttribute('class','pnode-core');
+                core.style.filter = `drop-shadow(0 0 8px ${fam.color}) drop-shadow(0 0 14px #d4af37)`;
+                const coreRing = svgEl('circle');
+                coreRing.setAttribute('cx',mx); coreRing.setAttribute('cy',my);
+                coreRing.setAttribute('r', rr.toFixed(1)); coreRing.setAttribute('fill','none');
+                coreRing.setAttribute('stroke','#f0d060'); coreRing.setAttribute('stroke-width','0.5');
+                coreRing.setAttribute('opacity','0.5');
+                ng.appendChild(outer); ng.appendChild(inner); ng.appendChild(coreRing); ng.appendChild(core);
+                ng.appendChild(svgText(ch.name, mx, my+24, '#f0ece0', 11, 'middle'));
+                g.appendChild(ng);
+
+                // 交互：悬停角色（节点光晕扩大 + 卷轴显示角色信息）
+                ng.addEventListener('mouseenter', ()=> {
+                    inner.setAttribute('r', 50);
+                    updatePedigreeScrollChar(ch);
+                    document.getElementById('overviewRight').textContent = ch.family + ' · ' + ch.name;
+                });
+                ng.addEventListener('mouseleave', ()=> {
+                    inner.setAttribute('r', 30);
+                    if (focusedFamily){ updatePedigreeScrollFamily(focusedFamily); document.getElementById('overviewRight').textContent = focusedFamily.family; }
+                    else { document.getElementById('overviewRight').textContent = '— 凝望整棵世界树 —'; }
+                });
+                // 点击角色：节点绽放 + 复用万象图 showDetail(char) 滑入详情卡片
+                ng.addEventListener('click', (e)=> {
+                    e.stopPropagation();
+                    const burst = svgEl('circle');
+                    burst.setAttribute('cx',mx); burst.setAttribute('cy',my);
+                    burst.setAttribute('r', rr); burst.setAttribute('fill','none');
+                    burst.setAttribute('stroke','#f0d060'); burst.setAttribute('stroke-width','2');
+                    ng.appendChild(burst);
+                    let br = rr;
+                    const bi = setInterval(()=>{
+                        br += 4;
+                        burst.setAttribute('r', br);
+                        burst.setAttribute('opacity', Math.max(0, 1-(br-rr)/42));
+                        if (br > rr+42){ clearInterval(bi); burst.remove(); }
+                    }, 16);
+                    showDetail(ch);
+                });
+                // 长按 2s：追溯血脉（金色光线沿主干延伸到大地之母再回原位）
+                let lpTimer = null;
+                const startLP = ()=> { lpTimer = setTimeout(()=> traceLineage(trunkPath, fam, rootX, rootY), 2000); };
+                const endLP = ()=> { if (lpTimer){ clearTimeout(lpTimer); lpTimer = null; } };
+                ng.addEventListener('mousedown', startLP);
+                ng.addEventListener('mouseup', endLP);
+                ng.addEventListener('mouseleave', endLP);
+                ng.addEventListener('touchstart', startLP, {passive:true});
+                ng.addEventListener('touchend', endLP);
+            });
+
+            // 悬停家族组：高亮本支、其他变暗（聚焦态下不响应）
+            g.addEventListener('mouseenter', ()=> {
+                if (focusedFamily) return;
+                familiesLayer.classList.add('pedigree-dim');
+                g.classList.add('fam-focus');
+            });
+            g.addEventListener('mouseleave', ()=> {
+                if (focusedFamily) return;
+                familiesLayer.classList.remove('pedigree-dim');
+                g.classList.remove('fam-focus');
+                resetPedigreeScroll();
+                document.getElementById('overviewRight').textContent = '— 凝望整棵世界树 —';
+            });
+
+            familiesLayer.appendChild(g);
+
+            // 主脉粒子（2-4 颗，从根部向末端极慢移动 15-25s）
+            const pcount = 2 + Math.floor(Math.random()*3);
+            for (let p=0;p<pcount;p++){
+                const pc = svgEl('circle');
+                pc.setAttribute('r', (1+Math.random()).toFixed(1));
+                pc.setAttribute('fill','#f0d060');
+                pc.setAttribute('class','particle');
+                pc.setAttribute('opacity','0.85');
+                familiesLayer.appendChild(pc);
+                pedParticles.push({ el: pc, path: trunkPath, t: Math.random(), speed: 0.000045 + Math.random()*0.00003 });
+            }
+        });
+
+        buildFamilyTags(families);
+        startParticles();
+        fitPedigreeSvg();
+        bindStageInteractions();
+        resetPedigreeScroll();
+    }
+
+    /* ===== 顶部家族标签按钮 ===== */
+    function buildFamilyTags(families){
+        const box = document.getElementById('familyTags');
+        box.innerHTML = '';
+        families.forEach(fam => {
+            const b = document.createElement('button');
+            b.className = 'family-tag';
+            b.innerHTML = `<span class="tag-dot" style="background:${fam.color};color:${fam.color};"></span>${fam.emoji} ${fam.family}`;
+            b.addEventListener('mouseenter', ()=> { if (!focusedFamily) hoverFamily(fam); });
+            b.addEventListener('mouseleave', ()=> { if (!focusedFamily) unhoverFamily(); });
+            b.addEventListener('click', ()=> focusFamily(fam));
+            box.appendChild(b);
+        });
+    }
+    function hoverFamily(fam){
+        const layer = document.getElementById('familiesLayer');
+        layer.classList.add('pedigree-dim');
+        layer.querySelectorAll('.fam-group').forEach(g => g.classList.toggle('fam-focus', g.getAttribute('data-family') === fam.family));
+        updatePedigreeScrollFamily(fam);
+        document.getElementById('overviewRight').textContent = fam.family;
+    }
+    function unhoverFamily(){
+        const layer = document.getElementById('familiesLayer');
+        layer.classList.remove('pedigree-dim');
+        layer.querySelectorAll('.fam-group').forEach(g => g.classList.remove('fam-focus'));
+        resetPedigreeScroll();
+        document.getElementById('overviewRight').textContent = '— 凝望整棵世界树 —';
+    }
+    function focusFamily(fam){
+        if (focusedFamily === fam){ focusedFamily = null; unhoverFamily(); return; } // 再次点击同一标签取消聚焦
+        focusedFamily = fam;
+        hoverFamily(fam);
+        // 树自动滚动到该分支位置
+        const stage = document.getElementById('pedigreeStage');
+        const svg = document.getElementById('pedigreeSvg');
+        const scale = svg.getBoundingClientRect().width / PED_W;
+        const targetX = (fam._trunkX + 165) * scale - stage.clientWidth/2;
+        stage.scrollTo({ left: Math.max(0, targetX), behavior: 'smooth' });
+    }
+
+    /* ===== 粒子流动（聚焦时加速） ===== */
+    function startParticles(){
+        if (pedRaf) cancelAnimationFrame(pedRaf);
+        const tick = ()=> {
+            const boost = focusedFamily ? 2.2 : 1;
+            pedParticles.forEach(p => {
+                p.t += p.speed * boost * 16;
+                if (p.t > 1) p.t = 0;
+                try {
+                    const L = p.path.getTotalLength();
+                    const pt = p.path.getPointAtLength(L * p.t);
+                    p.el.setAttribute('cx', pt.x);
+                    p.el.setAttribute('cy', pt.y);
+                } catch(e){}
+            });
+            pedRaf = requestAnimationFrame(tick);
+        };
+        tick();
+    }
+
+    /* ===== 自动巡视：切入后从左向右缓慢生长一次（约 8s） ===== */
+    function triggerGrowth(){
+        const svg = document.getElementById('pedigreeSvg');
+        const paths = Array.from(svg.querySelectorAll('.trunk-path, .branch-path'));
+        const golds = Array.from(svg.querySelectorAll('.trunk-gold'));
+        paths.sort((a,b) => pathMidX(a) - pathMidX(b));
+        // 隐藏节点与标签
+        const charGroups = Array.from(svg.querySelectorAll('g.pnode-char'));
+        const trunkNodes = Array.from(svg.querySelectorAll('.fam-group > .pnode-core, .fam-group > .pnode-glow-outer'));
+        const famLabels = Array.from(svg.querySelectorAll('.fam-group > text'));
+        charGroups.forEach(g => { g.style.transition='opacity 0.6s ease'; g.style.opacity='0'; });
+        trunkNodes.forEach(el => { el.style.transition='opacity 0.6s ease'; el.style.opacity='0'; });
+        famLabels.forEach(el => { el.style.transition='opacity 0.6s ease'; el.style.opacity='0'; });
+        golds.forEach(p => { p.style.transition='opacity 0.4s ease'; p.style.opacity='0'; });
+        // 枝条用 stroke-dashoffset 绘制
+        paths.forEach(p => { try { const L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; } catch(e){} });
+        void svg.getBoundingClientRect();
+        paths.forEach((p,i) => {
+            p.style.transition = 'stroke-dashoffset 1s ease-out ' + (i*85) + 'ms';
+            requestAnimationFrame(()=> { p.style.strokeDashoffset = '0'; });
+        });
+        golds.forEach((p,i) => { p.style.transitionDelay = (i*85+180)+'ms'; p.style.opacity = '0.5'; });
+        // 节点按 x 顺序渐显
+        charGroups.sort((a,b)=> nodeX(a)-nodeX(b));
+        charGroups.forEach((g,i)=> { g.style.transitionDelay = (350+i*70)+'ms'; requestAnimationFrame(()=> g.style.opacity='1'); });
+        trunkNodes.forEach((el,i)=> { el.style.transitionDelay = (180+i*55)+'ms'; requestAnimationFrame(()=> el.style.opacity=''); });
+        famLabels.forEach((el,i)=> { el.style.transitionDelay = (250+i*50)+'ms'; requestAnimationFrame(()=> el.style.opacity=''); });
+        // 清理内联样式，避免影响后续交互
+        setTimeout(()=> {
+            paths.forEach(p => { p.style.strokeDasharray='none'; p.style.strokeDashoffset='0'; p.style.transition=''; });
+            charGroups.forEach(g => { g.style.transitionDelay=''; });
+            trunkNodes.forEach(el => { el.style.transitionDelay=''; });
+            famLabels.forEach(el => { el.style.transitionDelay=''; });
+            golds.forEach(p => { p.style.transitionDelay=''; });
+        }, 9000);
+    }
+    function pathMidX(p){ try { const L=p.getTotalLength(); const pt=p.getPointAtLength(L/2); return pt.x; } catch(e){ return 0; } }
+    function nodeX(g){ const c=g.querySelector('circle'); return parseFloat(c.getAttribute('cx'))||0; }
+
+    /* ===== 自适应尺寸（保持 viewBox 比例，横向可滚动） ===== */
+    function fitPedigreeSvg(){
+        const stage = document.getElementById('pedigreeStage');
+        const svg = document.getElementById('pedigreeSvg');
+        if (!stage || !svg) return;
+        const h = stage.clientHeight;
+        if (h < 50) return; // 容器尚未布局
+        svg.style.height = h + 'px';
+        svg.style.width = (h * PED_W / PED_H) + 'px';
+    }
+
+    /* ===== 舞台交互：横向滚轮 / Ctrl+滚轮缩放 / 双击呼吸 ===== */
+    function bindStageInteractions(){
+        const stage = document.getElementById('pedigreeStage');
+        const svg = document.getElementById('pedigreeSvg');
+        stage.addEventListener('wheel', (e)=> {
+            if (e.ctrlKey) {
+                // 缩放 80%-120%
+                e.preventDefault();
+                let z = currentZoom + (e.deltaY < 0 ? 0.05 : -0.05);
+                z = Math.max(0.8, Math.min(1.2, z));
+                currentZoom = z;
+                svg.style.transform = `scale(${z})`;
+            } else if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                // 垂直滚轮转横向滚动，模拟漫步于树冠之下
+                stage.scrollLeft += e.deltaY;
+                e.preventDefault();
+            }
+        }, {passive:false});
+        // 双击空白处：整棵树缓慢呼吸一次
+        stage.addEventListener('dblclick', (e)=> {
+            if (e.target === stage || e.target === svg) treeBreathe();
+        });
+    }
+    function treeBreathe(){
+        const svg = document.getElementById('pedigreeSvg');
+        svg.querySelectorAll('.pnode-glow-inner, .pnode-glow-outer').forEach(el => {
+            const orig = el.getAttribute('opacity');
+            el.style.transition = 'opacity 0.6s ease';
+            el.style.opacity = '0.9';
+            setTimeout(()=> { el.style.opacity = orig || ''; }, 600);
+        });
+        svg.querySelectorAll('.pnode-core').forEach(el => {
+            const f = el.style.filter || '';
+            el.style.transition = 'filter 0.6s ease';
+            el.style.filter = f + ' brightness(1.6)';
+            setTimeout(()=> { el.style.filter = f; }, 600);
+        });
+    }
+
+    /* ===== 长按追溯血脉：从节点沿主干到根部再回原位 ===== */
+    function traceLineage(trunkPath, fam, rootX, rootY){
+        const svg = document.getElementById('pedigreeSvg');
+        const trace = svgEl('circle');
+        const L = trunkPath.getTotalLength();
+        const startT = pathTNearest(trunkPath, fam._trunkX, fam._trunkY); // 末端附近
+        trace.setAttribute('r', 4.5); trace.setAttribute('fill', '#f0d060');
+        trace.setAttribute('opacity', '0.95');
+        trace.style.filter = 'drop-shadow(0 0 6px #f0d060)';
+        svg.appendChild(trace);
+        let t = startT, phase = 'toRoot';
+        const step = ()=> {
+            const pt = trunkPath.getPointAtLength(L * t);
+            trace.setAttribute('cx', pt.x); trace.setAttribute('cy', pt.y);
+            if (phase === 'toRoot') { t -= 0.012; if (t <= 0){ t = 0; phase = 'back'; } }
+            else { t += 0.012; if (t >= startT){ if (trace.parentNode) svg.removeChild(trace); return; } }
+            requestAnimationFrame(step);
+        };
+        step();
+    }
+    function pathTNearest(path, x, y){
+        const L = path.getTotalLength();
+        let best = 1, bestD = 1e9;
+        for (let i = 1; i >= 0; i -= 0.04){
+            const pt = path.getPointAtLength(L * i);
+            const d = (pt.x-x)*(pt.x-x) + (pt.y-y)*(pt.y-y);
+            if (d < bestD){ bestD = d; best = i; }
+        }
+        return best;
+    }
+
+    /* ===== 谱系卷轴内容更新 ===== */
+    function updatePedigreeScrollFamily(fam){
+        const box = document.getElementById('pedigreeScrollContent');
+        const members = fam.members.map(c => c.name).join(' · ');
+        box.style.opacity = '0';
+        setTimeout(()=> {
+            box.innerHTML = `
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-name">${fam.emoji} ${fam.family}</div><div class="pscroll-row pscroll-sub">${fam.members.length}位气候之灵</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-motto">「${fam.motto}」</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-sub">${members}</div></div>
+                <div class="pscroll-divider"></div>`;
+            box.style.opacity = '1';
+        }, 120);
+    }
+    function updatePedigreeScrollChar(ch){
+        const box = document.getElementById('pedigreeScrollContent');
+        const motto = (ch.motto || '').slice(0, 22);
+        box.style.opacity = '0';
+        setTimeout(()=> {
+            box.innerHTML = `
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-name">${ch.name}</div><div class="pscroll-row pscroll-sub">${ch.title || ''}</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-motto">「${motto}…」</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-sub">${ch.family} · ${ch.position || ''}</div></div>
+                <div class="pscroll-divider"></div>`;
+            box.style.opacity = '1';
+        }, 120);
+    }
+    function resetPedigreeScroll(){
+        const box = document.getElementById('pedigreeScrollContent');
+        box.style.opacity = '0';
+        setTimeout(()=> {
+            box.innerHTML = `
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-hint">将光标悬停于谱系之上</div><div class="pscroll-row pscroll-hint">阅读气候之灵的血脉</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-name">CLIMATERIA</div><div class="pscroll-row pscroll-sub">谱 系</div></div>
+                <div class="pscroll-divider"></div>
+                <div class="pscroll-col"><div class="pscroll-row pscroll-motto">从何而来</div></div>
+                <div class="pscroll-divider"></div>`;
+            box.style.opacity = '1';
+        }, 120);
+    }
+
+    // 窗口尺寸变化时重新适配谱系画布
+    window.addEventListener('resize', ()=> { if (pedigreeBuilt) fitPedigreeSvg(); });
     </script>
 </body>
 </html>
