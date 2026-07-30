@@ -13,7 +13,7 @@
             --gold: #d4af37;
             --gold-bright: #f0d060;
             --gold-deep: #b8942a;
-            --ink-deep: #0a1128;
+            --ink-deep: #000000;
             --ink-mid: #1a3a5c;
             --paper-warm: #f0ece0;
             --paper-cool: #e8dcc8;
@@ -166,10 +166,10 @@
             transform: translate(-50%, -50%);
             text-align: center; z-index: 101; opacity: 0;
         }
-        #poetry.show { animation: poetry-appear 12s ease-in-out forwards; }
+        #poetry.show { animation: poetry-appear 15s ease-in-out forwards; }
         @keyframes poetry-appear {
-            0% { opacity: 0; } 5% { opacity: 0; } 8% { opacity: 1; }
-            82% { opacity: 1; } 100% { opacity: 0; }
+            0% { opacity: 0; } 4% { opacity: 0; } 6% { opacity: 1; }
+            85% { opacity: 1; } 100% { opacity: 0; }
         }
         .poetry-line {
             font-size: 28px;
@@ -186,6 +186,7 @@
         .poetry-line:nth-child(1) { animation: line-appear 1.2s ease-out 2.0s forwards; }
         .poetry-line:nth-child(2) { animation: line-appear 1.2s ease-out 5.0s forwards; }
         .poetry-line:nth-child(3) { animation: line-appear 1.2s ease-out 8.0s forwards; }
+        .poetry-line:nth-child(4) { animation: line-appear 1.2s ease-out 11.0s forwards; }
         @keyframes line-appear { to { opacity: 1; } }
 
         /* ===== 首页背景图 ===== */
@@ -356,21 +357,37 @@
             position: relative;
             flex: 1;
             width: 100%;
-            overflow: visible;
+            overflow: hidden;          /* 视口边界，超出隐藏 */
             background: var(--ink-deep);
             display: flex;
-            align-items: stretch;
+            align-items: center;
             justify-content: center;
             z-index: 91;
+            touch-action: none;        /* 禁用浏览器默认手势，自定义拖拽/缩放 */
+            cursor: grab;
         }
-        .map-image {
-            width: 100%;
+        .map-container.dragging { cursor: grabbing; }
+        /* 可平移/缩放的画布层：地图 + 圆点统一在此层内，百分比坐标始终对齐 */
+        .map-canvas {
+            position: relative;
+            flex: 0 0 auto;
             height: 100%;
-            object-fit: cover;
+            /* 宽度由 JS 按地图原始宽高比计算，保证地图完整且圆点坐标对齐 */
+            transform-origin: center center;
+            transition: transform 0.05s linear;   /* 极短过渡，拖拽跟手 */
+            will-change: transform;
+            user-select: none;
+        }
+        .map-container.smooth .map-canvas { transition: transform 0.35s cubic-bezier(0.2,0,0.2,1); }
+        .map-image {
             display: block;
+            height: 100%;
+            width: auto;
+            max-width: none;
+            object-fit: contain;
             user-select: none;
             -webkit-user-drag: none;
-            padding: 0 4px;
+            pointer-events: none;       /* 拖拽穿透到容器 */
         }
 
         /* 27个交互圆点 */
@@ -1469,6 +1486,95 @@
         .compass-panel-desc { font-size:13px; line-height:1.7; color:#e8dcc8; margin-bottom:12px; }
         .compass-panel-members { font-size:12px; line-height:1.8; color:#c8d0d8; }
         .compass-panel-close { position:absolute; top:6px; right:10px; cursor:pointer; color:#d4af37; font-size:18px; line-height:1; }
+
+        /* ===== 左侧两块副信息面板 ===== */
+        .compass-sub-panel {
+            position:absolute; left:24px; width:260px; max-width:32%;
+            background: rgba(10,17,40,0.86);
+            border-radius:10px;
+            padding:14px 16px;
+            color:#f0ece0; font-family:var(--font-cn);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow:0 0 24px rgba(0,0,0,0.6);
+            opacity:0; pointer-events:none;
+            transform:translateX(-20px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            z-index:6; overflow-y:auto;
+        }
+        .compass-sub-panel.show { opacity:1; pointer-events:auto; transform:translateX(0); }
+        /* 上板：贴顶偏下 */
+        .compass-sub-panel.top { top:20px; max-height:42%; }
+        /* 下板：贴底偏上 */
+        .compass-sub-panel.bottom { bottom:20px; max-height:42%; }
+
+        /* 上板 —— 母系家族描述（金色基调，与主面板统一） */
+        .compass-sub-panel.top {
+            border:1px solid rgba(212,175,55,0.45);
+            box-shadow:0 0 24px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(240,208,96,0.08);
+        }
+        .compass-sub-panel.top .csp-title {
+            font-size:15px; color:#f0d060; letter-spacing:3px; margin-bottom:2px;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+        }
+        .compass-sub-panel.top .csp-sub {
+            font-size:11px; color:#d4af37; letter-spacing:1px; margin-bottom:10px; opacity:0.85;
+        }
+        .compass-sub-panel.top .csp-body {
+            font-size:12.5px; line-height:1.85; color:#e8dcc8;
+        }
+
+        /* 下板 —— 核心知识点（薄荷绿高级质感渐变发光框） */
+        .compass-sub-panel.bottom {
+            border:1px solid rgba(120,220,180,0.55);
+            box-shadow:
+                0 0 22px rgba(120,220,180,0.28),
+                0 0 44px rgba(120,220,180,0.14),
+                inset 0 0 0 1px rgba(160,240,210,0.18);
+        }
+        .compass-sub-panel.bottom::before {
+            content:''; position:absolute; inset:-1px;
+            border-radius:11px; padding:1px; pointer-events:none;
+            background: linear-gradient(135deg, rgba(140,240,200,0.7) 0%, rgba(90,200,160,0.35) 40%, rgba(180,255,220,0.6) 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+        }
+        .compass-sub-panel.bottom .csp-title {
+            font-size:15px;
+            background: linear-gradient(90deg, #aef5d6 0%, #7adcb0 50%, #aef5d6 100%);
+            -webkit-background-clip:text; background-clip:text;
+            color:transparent;
+            letter-spacing:3px; margin-bottom:2px;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+        }
+        .compass-sub-panel.bottom .csp-sub {
+            font-size:11px; color:#8fd8b6; letter-spacing:1px; margin-bottom:10px; opacity:0.85;
+        }
+        .compass-sub-panel.bottom .csp-body {
+            font-size:12.5px; line-height:1.85; color:#d8ece0;
+        }
+        .compass-sub-panel .csp-close {
+            position:absolute; top:6px; right:10px; cursor:pointer;
+            font-size:16px; line-height:1; opacity:0.7; transition:opacity 0.2s;
+        }
+        .compass-sub-panel .csp-close:hover { opacity:1; }
+        .compass-sub-panel.top .csp-close { color:#d4af37; }
+        .compass-sub-panel.bottom .csp-close { color:#8fd8b6; }
+
+        /* 三块信息板滚动条：极淡几乎不可见，但仍可滑动 */
+        .compass-panel::-webkit-scrollbar,
+        .compass-sub-panel::-webkit-scrollbar { width: 3px; }
+        .compass-panel::-webkit-scrollbar-track,
+        .compass-sub-panel::-webkit-scrollbar-track { background: transparent; }
+        .compass-panel::-webkit-scrollbar-thumb,
+        .compass-sub-panel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+        }
+        .compass-panel::-webkit-scrollbar-thumb:hover,
+        .compass-sub-panel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+        .compass-panel { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.06) transparent; }
+        .compass-sub-panel { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.06) transparent; }
+
         /* 底部牛皮卷轴（与万象图/谱系视觉一致） */
         .compass-scroll {
             flex-shrink:0; height:120px;
@@ -1511,6 +1617,597 @@
             .cscroll-sub { font-size:11px; }
             .cscroll-hint { font-size:10px; }
             .compass-panel { width:200px; right:12px; padding:12px 14px; }
+        }
+
+        /* ===== 问灵页面（CLIMATERIA · 视觉小说模式） ===== */
+        .oracle-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+            background: #05080f;
+            position: relative;
+            z-index: 80;
+            overflow: hidden;
+        }
+        .oracle-view.show { display: flex; }
+        /* 顶部场景标题栏 */
+        .oracle-overview {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 14px 28px;
+            border-bottom: 1px solid rgba(212,175,55,0.22);
+            background: rgba(8,12,24,0.78);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 5;
+        }
+        .oracle-overview-left { text-align:center; flex-shrink:0; line-height:1.3; }
+        .oracle-overview-left .ov-num {
+            display:block;
+            color:#d4af37;
+            font-size:14px;
+            letter-spacing:6px;
+            font-family:var(--font-en);
+            margin-bottom:2px;
+            opacity:0.85;
+        }
+        .oracle-overview-left .ov-cn {
+            display:block;
+            color:#f5e6b8;
+            font-size:26px;
+            font-weight:700;
+            letter-spacing:8px;
+            font-family:'STKaiti','KaiTi','楷体','STSong','宋体',serif;
+            text-shadow:0 0 14px rgba(212,175,55,0.4), 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .oracle-overview-left .ov-en {
+            display:block;
+            color:#c8b888;
+            font-size:13px;
+            letter-spacing:3px;
+            font-family:var(--font-en);
+            font-style:italic;
+            margin-top:3px;
+            opacity:0.9;
+        }
+        .oracle-overview-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; flex:1; }
+        .oracle-chapter-tag {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:5px 14px;
+            border:1px solid rgba(212,175,55,0.32);
+            border-radius:20px;
+            background:rgba(255,255,255,0.03);
+            color:#c8c0a8;
+            font-size:12px; letter-spacing:1px; cursor:pointer;
+            transition: all 0.3s ease; font-family:var(--font-cn);
+        }
+        .oracle-chapter-tag:hover { background:rgba(212,175,55,0.15); border-color:rgba(212,175,55,0.65); color:#fff; }
+        .oracle-chapter-tag.active { background:rgba(212,175,55,0.25); border-color:rgba(240,208,96,0.85); color:#fff; box-shadow:0 0 10px rgba(240,208,96,0.3); }
+        .oracle-chapter-tag.locked { opacity:0.4; cursor:not-allowed; }
+        .oracle-overview-right { color:#d4af37; font-size:12px; letter-spacing:2px; flex-shrink:0; min-width:120px; text-align:right; font-family:var(--font-cn); }
+
+        /* 主舞台：背景 + 立绘 */
+        .oracle-stage {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #05080f;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+        .oracle-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            transition: opacity 0.8s ease, filter 0.8s ease;
+        }
+        .oracle-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.35) 100%);
+            pointer-events: none;
+        }
+        /* 立绘层 */
+        .oracle-sprites {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .oracle-sprite {
+            position: absolute;
+            bottom: 0;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+            height: 100%;
+            transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: auto;
+            cursor: pointer;
+            filter: drop-shadow(0 0 0 transparent);
+        }
+        .oracle-sprite img {
+            height: 100%;
+            width: auto;
+            max-width: none;
+            display: block;
+            object-fit: cover;
+            object-position: bottom center;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
+        }
+        /* 默认暗沉（非说话者） */
+        .oracle-sprite.dim {
+            filter: brightness(0.5) saturate(0.6);
+            opacity: 0.85;
+        }
+        /* 说话者高亮 */
+        .oracle-sprite.speaking {
+            z-index: 10;
+            filter: brightness(1.05);
+        }
+        /* 暖色光晕（厄尔尼诺） */
+        .oracle-sprite.glow-warm.speaking img {
+            filter: drop-shadow(0 0 18px rgba(232,168,71,0.55)) drop-shadow(0 0 6px rgba(0,0,0,0.4)) brightness(1.05);
+        }
+        /* 冷色光晕（拉尼娜） */
+        .oracle-sprite.glow-cool.speaking img {
+            filter: drop-shadow(0 0 18px rgba(168,200,224,0.55)) drop-shadow(0 0 6px rgba(0,0,0,0.4)) brightness(1.05);
+        }
+        /* 表情状态 */
+        .oracle-sprite.expr-smile.speaking img { filter: brightness(1.12) saturate(1.1); }
+        .oracle-sprite.expr-contemplation { filter: brightness(0.78) saturate(0.8); }
+        .oracle-sprite.expr-contemplation.speaking img { filter: brightness(0.9) contrast(0.95); }
+        .oracle-sprite.expr-passionate.speaking img { filter: brightness(1.18) saturate(1.25); }
+        .oracle-sprite.glow-warm.expr-passionate.speaking img { filter: drop-shadow(0 0 26px rgba(255,200,100,0.75)) drop-shadow(0 0 8px rgba(0,0,0,0.4)) brightness(1.18) saturate(1.25); }
+        .oracle-sprite.glow-cool.expr-passionate.speaking img { filter: drop-shadow(0 0 26px rgba(180,210,255,0.75)) drop-shadow(0 0 8px rgba(0,0,0,0.4)) brightness(1.18) saturate(1.25); }
+        .oracle-sprite.expr-sad img { filter: brightness(0.82) hue-rotate(-8deg) saturate(0.7); opacity: 0.92; }
+        .oracle-sprite.expr-sad.speaking img { filter: brightness(0.9) hue-rotate(-6deg) saturate(0.8); }
+        .oracle-sprite.expr-surprised.speaking { animation: oracleFlash 0.6s ease-out; }
+        @keyframes oracleFlash {
+            0% { filter: brightness(1); }
+            30% { filter: brightness(1.6); }
+            100% { filter: brightness(1.05); }
+        }
+        /* 立绘轻微浮动呼吸 */
+        .oracle-sprite { animation: oracleBreathe 6s ease-in-out infinite; }
+        .oracle-sprite.dim { animation: oracleBreatheDim 9s ease-in-out infinite; }
+        @keyframes oracleBreathe {
+            0%,100% { transform: translateX(-50%) translateY(0) scale(1); }
+            50% { transform: translateX(-50%) translateY(-4px) scale(1); }
+        }
+        @keyframes oracleBreatheDim {
+            0%,100% { transform: translateX(-50%) translateY(0) scale(1); }
+            50% { transform: translateX(-50%) translateY(-2px) scale(1); }
+        }
+        /* 说话时再微微放大 */
+        .oracle-sprite.speaking { transform: translateX(-50%) scale(1.04); }
+        .oracle-sprite.speaking { animation: oracleBreatheSpeaking 6s ease-in-out infinite; }
+        @keyframes oracleBreatheSpeaking {
+            0%,100% { transform: translateX(-50%) translateY(0) scale(1.04); }
+            50% { transform: translateX(-50%) translateY(-4px) scale(1.04); }
+        }
+        /* 鼠标悬停立绘微微放大（暂停呼吸动画） */
+        .oracle-sprite:hover { animation-play-state: paused; transform: translateX(-50%) scale(1.06); }
+
+        /* 旁白层（场景切换文字） */
+        .oracle-narration {
+            position: absolute;
+            inset: 0;
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .oracle-narration.show { opacity: 1; }
+        .oracle-narration-text {
+            max-width: 60%;
+            text-align: center;
+            color: #f0ece0;
+            font-family: var(--font-cn);
+            font-size: 18px;
+            letter-spacing: 3px;
+            line-height: 2;
+            text-shadow: 0 0 12px rgba(0,0,0,0.8), 0 0 24px rgba(212,175,55,0.3);
+            font-style: italic;
+        }
+
+        /* 底部对话框（羊皮纸质感 + 金箔装饰线） */
+        .oracle-dialogue-wrap {
+            position: relative;
+            z-index: 8;
+            flex-shrink: 0;
+            padding: 14px 28px 10px;
+            background: linear-gradient(180deg, transparent 0%, rgba(8,12,24,0.6) 30%, rgba(8,12,24,0.92) 100%);
+        }
+        .oracle-dialogue {
+            position: relative;
+            background:
+                linear-gradient(135deg, rgba(245,232,205,0.96) 0%, rgba(235,218,185,0.96) 50%, rgba(245,232,205,0.96) 100%);
+            border: 1px solid rgba(212,175,55,0.55);
+            border-radius: 8px;
+            padding: 18px 28px 20px;
+            min-height: 92px;
+            box-shadow:
+                0 0 0 1px rgba(240,208,96,0.18) inset,
+                0 4px 24px rgba(0,0,0,0.5),
+                0 0 30px rgba(212,175,55,0.08);
+            backdrop-filter: blur(2px);
+        }
+        .oracle-dialogue::before, .oracle-dialogue::after {
+            content: '';
+            position: absolute;
+            width: 28px; height: 28px;
+            border: 1px solid rgba(212,175,55,0.6);
+            pointer-events: none;
+        }
+        .oracle-dialogue::before { top: 6px; left: 6px; border-right:none; border-bottom:none; }
+        .oracle-dialogue::after { bottom: 6px; right: 6px; border-left:none; border-top:none; }
+        .oracle-speaker {
+            display: inline-block;
+            font-family: var(--font-cn);
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 4px;
+            color: #2d1a08;
+            padding: 2px 14px 2px 0;
+            margin-bottom: 8px;
+            border-right: 2px solid rgba(212,175,55,0.5);
+            padding-right: 14px;
+        }
+        .oracle-speaker.warm { color: #9a5a18; text-shadow: 0 0 8px rgba(232,168,71,0.3); }
+        .oracle-speaker.cool { color: #2a4a6a; text-shadow: 0 0 8px rgba(168,200,224,0.3); }
+        .oracle-speaker.narrator { color: #5a4628; font-style: italic; border-right: none; }
+        .oracle-text {
+            font-family: var(--font-cn);
+            font-size: 16px;
+            line-height: 1.9;
+            color: #1a1008;
+            letter-spacing: 1px;
+            min-height: 32px;
+        }
+        .oracle-text .char {
+            display: inline-block;
+            opacity: 0;
+            transition: opacity 0.04s ease;
+        }
+        .oracle-text .char.show { opacity: 1; }
+        .oracle-text .char.listen-hl {
+            color: #9a5a18;
+            text-shadow: 0 0 6px rgba(232,168,71,0.4);
+        }
+        /* 灵言悬停光晕 */
+        .oracle-text.listen-mode .char { transition: opacity 0.04s ease, color 0.3s ease, text-shadow 0.3s ease; }
+
+        /* 底部控制栏 */
+        .oracle-controls {
+            position: relative;
+            z-index: 8;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 8px 28px 14px;
+            background: rgba(8,12,24,0.92);
+            border-top: 1px solid rgba(212,175,55,0.15);
+        }
+        .oracle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(212,175,55,0.35);
+            border-radius: 22px;
+            color: #d8d0b8;
+            font-family: var(--font-cn);
+            font-size: 13px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .oracle-btn:hover { background: rgba(212,175,55,0.18); border-color: rgba(240,208,96,0.7); color:#fff; box-shadow: 0 0 10px rgba(240,208,96,0.2); }
+        .oracle-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .oracle-btn:disabled:hover { background: rgba(255,255,255,0.04); border-color: rgba(212,175,55,0.35); color:#d8d0b8; box-shadow:none; }
+        .oracle-btn.primary { background: rgba(212,175,55,0.22); border-color: rgba(240,208,96,0.7); color:#fff; }
+        .oracle-btn.auto-on { background: rgba(232,168,71,0.3); border-color: rgba(255,200,100,0.85); color:#fff; box-shadow: 0 0 12px rgba(255,200,100,0.35); }
+        .oracle-progress {
+            color: #8a8068;
+            font-family: var(--font-cn);
+            font-size: 12px;
+            letter-spacing: 2px;
+            min-width: 70px;
+            text-align: center;
+        }
+        /* 幕次列表浮层 */
+        .oracle-scene-list {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            max-height: 320px;
+            overflow-y: auto;
+            background: rgba(10,14,28,0.96);
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            display: none;
+            z-index: 20;
+        }
+        .oracle-scene-list.show { display: block; }
+        .oracle-scene-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #c8c0a8;
+            font-family: var(--font-cn);
+            font-size: 13px;
+            letter-spacing: 1px;
+            transition: background 0.2s ease;
+        }
+        .oracle-scene-item:hover { background: rgba(212,175,55,0.12); color:#fff; }
+        .oracle-scene-item.active { background: rgba(212,175,55,0.22); color:#f0d060; }
+        .oracle-scene-item .scene-idx {
+            flex-shrink: 0;
+            width: 26px; height: 26px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 50%;
+            font-size: 11px;
+            color: #d4af37;
+        }
+        .oracle-scene-item.active .scene-idx { background: rgba(240,208,96,0.2); border-color: rgba(240,208,96,0.8); }
+        .oracle-scene-item .scene-speaker {
+            margin-left: auto;
+            font-size: 11px;
+            color: #8a8068;
+        }
+        /* 滚动条 */
+        .oracle-scene-list::-webkit-scrollbar { width: 6px; }
+        .oracle-scene-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+        .oracle-scene-list::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 3px; }
+
+        /* ===== 侧边幕次栏（目录） ===== */
+        .oracle-toc-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 30;
+            width: 38px;
+            padding: 22px 6px;
+            background: linear-gradient(90deg, rgba(212,175,55,0.92) 0%, rgba(180,140,50,0.88) 100%);
+            border: 1px solid rgba(240,208,96,0.7);
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            color: #1a1208;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            cursor: pointer;
+            box-shadow: 4px 0 14px rgba(0,0,0,0.4), 0 0 16px rgba(212,175,55,0.25);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .oracle-toc-btn:hover {
+            background: linear-gradient(90deg, rgba(240,208,96,1) 0%, rgba(212,175,55,0.95) 100%);
+            box-shadow: 4px 0 18px rgba(0,0,0,0.5), 0 0 22px rgba(240,208,96,0.5);
+            width: 42px;
+        }
+        .oracle-toc-btn .toc-icon {
+            width: 16px; height: 16px;
+            flex-shrink: 0;
+        }
+        .oracle-toc-btn .toc-icon path {
+            stroke: #1a1208; stroke-width: 1.8; fill: none;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+        .oracle-toc-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 35%;
+            max-width: 400px;
+            z-index: 40;
+            background: url('table_of_contents_bg.webp') center center / cover no-repeat, #1a1208;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 8px 0 32px rgba(0,0,0,0.6);
+        }
+        .oracle-toc-panel.show { transform: translateX(0); }
+        .oracle-toc-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(20,12,4,0.55) 0%, rgba(20,12,4,0.35) 40%, rgba(20,12,4,0.55) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .oracle-toc-panel::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg, transparent 0%, rgba(240,208,96,0.5) 20%, rgba(240,208,96,0.7) 50%, rgba(240,208,96,0.5) 80%, transparent 100%);
+            box-shadow: 0 0 8px rgba(240,208,96,0.4);
+            z-index: 2;
+        }
+        .oracle-toc-inner {
+            position: relative;
+            z-index: 3;
+            padding: 40px 28px 28px;
+        }
+        .oracle-toc-title {
+            text-align: center;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #f5e6b8;
+            letter-spacing: 10px;
+            text-shadow: 0 0 14px rgba(212,175,55,0.5), 0 2px 4px rgba(0,0,0,0.7);
+            margin-bottom: 8px;
+        }
+        .oracle-toc-subtitle {
+            text-align: center;
+            font-family: var(--font-en);
+            font-size: 11px;
+            color: #c8b888;
+            letter-spacing: 4px;
+            font-style: italic;
+            opacity: 0.8;
+            margin-bottom: 16px;
+        }
+        .oracle-toc-divider {
+            width: 60%;
+            height: 1px;
+            margin: 0 auto 24px;
+            background: linear-gradient(90deg, transparent 0%, rgba(240,208,96,0.3) 50%, transparent 100%);
+            opacity: 0.6;
+        }
+        .oracle-toc-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .oracle-toc-item + .oracle-toc-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 12px; right: 12px;
+            height: 0.5px;
+            background: rgba(240,208,96,0.15);
+        }
+        .oracle-toc-item:hover {
+            background: rgba(212,175,55,0.12);
+            box-shadow: 0 0 16px rgba(212,175,55,0.18) inset;
+        }
+        .oracle-toc-item.active {
+            background: linear-gradient(90deg, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.12) 100%);
+            box-shadow: 0 0 20px rgba(240,208,96,0.35), inset 0 0 0 1px rgba(240,208,96,0.3);
+        }
+        .oracle-toc-item.active .toc-num { color: #f5e6b8; }
+        .oracle-toc-item.active .toc-name { color: #fff; text-shadow: 0 0 8px rgba(240,208,96,0.5); }
+        .oracle-toc-item.active .toc-glyph { color: #f0d060; }
+        .oracle-toc-item.locked { opacity: 0.45; cursor: not-allowed; }
+        .oracle-toc-item.locked:hover { background: transparent; box-shadow: none; }
+        .oracle-toc-item .toc-glyph {
+            width: 28px; height: 28px;
+            flex-shrink: 0;
+            color: #c8b888;
+            transition: color 0.3s ease;
+        }
+        .oracle-toc-item .toc-glyph path,
+        .oracle-toc-item .toc-glyph circle,
+        .oracle-toc-item .toc-glyph line,
+        .oracle-toc-item .toc-glyph polyline,
+        .oracle-toc-item .toc-glyph polygon {
+            stroke: currentColor; stroke-width: 1.6; fill: none;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+        .oracle-toc-item .toc-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .oracle-toc-item .toc-num {
+            display: block;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+            font-size: 13px;
+            color: #d4af37;
+            letter-spacing: 3px;
+            margin-bottom: 2px;
+            opacity: 0.9;
+        }
+        .oracle-toc-item .toc-name {
+            display: block;
+            font-family:'STKaiti','KaiTi','楷体',serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #e8dcc8;
+            letter-spacing: 2px;
+            line-height: 1.3;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .oracle-toc-item .toc-name-en {
+            display: block;
+            font-family: var(--font-en);
+            font-size: 10px;
+            color: #9a8a68;
+            letter-spacing: 1.5px;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.85;
+        }
+        .oracle-toc-item.locked .toc-name::after {
+            content: ' · 待启';
+            font-size: 11px;
+            color: #8a7050;
+            font-weight: 400;
+        }
+        /* 遮罩（点击外部关闭） */
+        .oracle-toc-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 35;
+            background: rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .oracle-toc-mask.show { opacity: 1; pointer-events: auto; }
+        /* 幕次栏滚动条 */
+        .oracle-toc-panel::-webkit-scrollbar { width: 5px; }
+        .oracle-toc-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .oracle-toc-panel::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 3px; }
+
+        /* 问灵移动端适配 */
+        @media (max-width: 768px) {
+            .oracle-overview { padding: 8px 14px; }
+            .oracle-overview-left .ov-num { font-size:11px; letter-spacing:4px; }
+            .oracle-overview-left .ov-cn { font-size:20px; letter-spacing:5px; }
+            .oracle-overview-left .ov-en { font-size:10px; letter-spacing:2px; }
+            .oracle-sprite { height: 75%; }
+            .oracle-dialogue-wrap { padding: 10px 14px 6px; }
+            .oracle-dialogue { padding: 12px 16px 14px; min-height: 78px; }
+            .oracle-speaker { font-size:15px; letter-spacing:2px; }
+            .oracle-text { font-size:14px; line-height:1.8; }
+            .oracle-controls { padding: 6px 12px 10px; gap: 8px; }
+            .oracle-btn { padding: 5px 12px; font-size:11px; letter-spacing:1px; }
+            .oracle-progress { font-size:10px; min-width:50px; }
+            .oracle-scene-list { width: calc(100vw - 24px); }
+            .oracle-narration-text { font-size:14px; max-width: 85%; letter-spacing:2px; }
+            .oracle-toc-panel { width: 80%; }
+            .oracle-toc-btn { font-size:13px; padding:18px 5px; width:32px; }
+            .oracle-toc-title { font-size:22px; letter-spacing:6px; }
+            .oracle-toc-item .toc-name { font-size:15px; }
         }
 
         /* 响应式 */
@@ -1606,9 +2303,10 @@
             <div class="gold-dust d7"></div>
         </div>
         <div id="poetry">
-            <div class="poetry-line">你是否曾在热带雨林中，听见万物呼吸的节奏？</div>
-            <div class="poetry-line">你是否曾在沙漠深处，触碰到时间凝固的温度？</div>
-            <div class="poetry-line">你是否相信，每一次季风的到来，都是一场有预谋的赴约？</div>
+            <div class="poetry-line">你说，气候会不会也有灵魂？</div>
+            <div class="poetry-line">我听见雨林深处万物在呼吸。</div>
+            <div class="poetry-line">我触到沙漠尽头时间凝作沙。</div>
+            <div class="poetry-line">我相信季风是大地与海的盟约。</div>
         </div>
     </div>
 
@@ -1640,9 +2338,11 @@
         </nav>
 
         <!-- 地图区域 -->
-        <div class="map-container">
-            <img src="世界气候地图.webp" alt="世界气候分布图" class="map-image" id="mapImage">
-            <div id="dots-container"></div>
+        <div class="map-container" id="mapContainer">
+            <div class="map-canvas" id="mapCanvas">
+                <img src="世界气候地图.webp" alt="世界气候分布图" class="map-image" id="mapImage">
+                <div id="dots-container"></div>
+            </div>
         </div>
 
         <!-- 底部卷轴（牛皮纸） -->
@@ -1704,6 +2404,20 @@
                     <div class="compass-panel-desc" id="compassPanelDesc"></div>
                     <div class="compass-panel-members" id="compassPanelMembers"></div>
                 </div>
+                <!-- 左上：母系家族描述 -->
+                <div class="compass-sub-panel top" id="compassMatrilinealPanel">
+                    <span class="csp-close" id="compassMatrilinealClose">×</span>
+                    <div class="csp-title" id="compassMatrilinealTitle"></div>
+                    <div class="csp-sub" id="compassMatrilinealSub"></div>
+                    <div class="csp-body" id="compassMatrilinealBody"></div>
+                </div>
+                <!-- 左下：核心知识点（薄荷绿渐变发光框） -->
+                <div class="compass-sub-panel bottom" id="compassKnowledgePanel">
+                    <span class="csp-close" id="compassKnowledgeClose">×</span>
+                    <div class="csp-title" id="compassKnowledgeTitle"></div>
+                    <div class="csp-sub" id="compassKnowledgeSub"></div>
+                    <div class="csp-body" id="compassKnowledgeBody"></div>
+                </div>
             </div>
             <!-- 底部牛皮卷轴预览卡（视觉与万象图/谱系一致） -->
             <div class="compass-scroll">
@@ -1716,6 +2430,51 @@
                     <div class="cscroll-col"><div class="cscroll-row cscroll-motto">温度的秩序</div></div>
                     <div class="cscroll-divider"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 问灵视图（视觉小说模式，与 map-container/scroll-container/pedigreeView/compassView 并列，默认隐藏；navbar 共用） -->
+        <div class="oracle-view" id="oracleView">
+            <!-- 顶部场景标题栏 -->
+            <div class="oracle-overview">
+                <div class="oracle-overview-left" id="oracleTitle">
+                    <span class="ov-num">ACT I</span>
+                    <span class="ov-cn">冷暖的约定</span>
+                    <span class="ov-en">The Pact of Warmth and Cold</span>
+                </div>
+            </div>
+            <!-- 主舞台：背景 + 立绘 -->
+            <div class="oracle-stage" id="oracleStage">
+                <div class="oracle-bg" id="oracleBg"></div>
+                <div class="oracle-sprites" id="oracleSprites"></div>
+                <div class="oracle-narration" id="oracleNarration">
+                    <div class="oracle-narration-text" id="oracleNarrationText"></div>
+                </div>
+                <!-- 侧边幕次栏（目录） -->
+                <button class="oracle-toc-btn" id="oracleTocBtn" title="目录">
+                    <svg class="toc-icon" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+                    <span>幕次</span>
+                </button>
+                <div class="oracle-toc-mask" id="oracleTocMask"></div>
+                <aside class="oracle-toc-panel" id="oracleTocPanel">
+                    <div class="oracle-toc-inner" id="oracleTocInner">
+                        <!-- 由 JS 动态生成 -->
+                    </div>
+                </aside>
+            </div>
+            <!-- 底部对话框 -->
+            <div class="oracle-dialogue-wrap">
+                <div class="oracle-dialogue">
+                    <span class="oracle-speaker" id="oracleSpeaker"></span>
+                    <div class="oracle-text" id="oracleText"></div>
+                </div>
+            </div>
+            <!-- 底部控制栏 -->
+            <div class="oracle-controls">
+                <button class="oracle-btn" id="oraclePrev">◀ 上一页</button>
+                <button class="oracle-btn primary" id="oracleNext">下一页 ▶</button>
+                <button class="oracle-btn" id="oracleAuto">自动播放</button>
+                <span class="oracle-progress" id="oracleProgress">1 / 16</span>
             </div>
         </div>
     </div>
@@ -1851,10 +2610,10 @@
     setTimeout(() => {
         document.getElementById('overlay').classList.add('fade-out');
         document.getElementById('landing-page').classList.add('show');
-    }, 10500);
+    }, 13500);
     setTimeout(() => {
         document.getElementById('start-button-container').classList.add('show');
-    }, 12000);
+    }, 15000);
 
     /* 创建7处涟漪 */
     function createRipples() {
@@ -1919,6 +2678,144 @@
             });
 
             container.appendChild(dot);
+        });
+
+        // 圆点创建完成后，初始化地图画布尺寸与平移/缩放交互
+        initMapPanZoom();
+    }
+
+    /* ===== 地图平移 + 缩放（推进推远） ===== */
+    let mapZoom = 1;              // 当前缩放倍率
+    let mapPanX = 0;              // 当前水平偏移（px，相对画布居中位置）
+    let mapPanY = 0;              // 当前垂直偏移
+    const MAP_MIN_ZOOM = 1;       // 最小缩放（不可小于原始适配尺寸）
+    const MAP_MAX_ZOOM = 3;       // 最大缩放
+    let mapDragging = false;
+    let mapDragStartX = 0, mapDragStartY = 0;
+    let mapPanStartX = 0, mapPanStartY = 0;
+
+    function applyMapTransform(){
+        const canvas = document.getElementById('mapCanvas');
+        if (!canvas) return;
+        canvas.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+    }
+
+    // 计算并设置画布宽度（按地图原始宽高比，使其在视口内完整显示）
+    function resizeMapCanvas(){
+        const container = document.getElementById('mapContainer');
+        const canvas = document.getElementById('mapCanvas');
+        const img = document.getElementById('mapImage');
+        if (!container || !canvas || !img) return;
+        const ch = container.clientHeight;
+        canvas.style.height = ch + 'px';
+        // 宽度 = 高度 × 原图宽高比（地图 2046×854 ≈ 2.396）
+        const aspect = (img.naturalWidth && img.naturalHeight) ? img.naturalWidth / img.naturalHeight : 2.396;
+        canvas.style.width = (ch * aspect) + 'px';
+        // 重置变换到居中初始态
+        mapZoom = 1; mapPanX = 0; mapPanY = 0;
+        applyMapTransform();
+    }
+
+    // 限制平移范围，使地图不会拖出视口留白
+    function clampPan(){
+        const container = document.getElementById('mapContainer');
+        const canvas = document.getElementById('mapCanvas');
+        if (!container || !canvas) return;
+        const cw = canvas.offsetWidth * mapZoom;   // 缩放后画布宽
+        const ch = canvas.offsetHeight * mapZoom;  // 缩放后画布高
+        const vw = container.clientWidth;          // 视口宽
+        const vh = container.clientHeight;         // 视口高
+        // 水平：若画布宽于视口，可左右拖动；否则居中（panX=0）
+        if (cw > vw){
+            const maxX = (cw - vw) / 2;
+            mapPanX = Math.max(-maxX, Math.min(maxX, mapPanX));
+        } else { mapPanX = 0; }
+        // 垂直：同理
+        if (ch > vh){
+            const maxY = (ch - vh) / 2;
+            mapPanY = Math.max(-maxY, Math.min(maxY, mapPanY));
+        } else { mapPanY = 0; }
+    }
+
+    function initMapPanZoom(){
+        const img = document.getElementById('mapImage');
+        const container = document.getElementById('mapContainer');
+        if (!img || !container) return;
+
+        // 等图片加载完成再计算尺寸
+        const setup = () => {
+            resizeMapCanvas();
+            bindMapPanZoom();
+        };
+        if (img.complete && img.naturalWidth) setup();
+        else img.addEventListener('load', setup, { once:true });
+
+        // 窗口尺寸变化时重新适配
+        window.addEventListener('resize', () => {
+            resizeMapCanvas();
+        });
+    }
+
+    function bindMapPanZoom(){
+        const container = document.getElementById('mapContainer');
+        if (!container || container.dataset.pzBound) return;
+        container.dataset.pzBound = '1';
+
+        // 鼠标拖拽平移
+        container.addEventListener('mousedown', (e) => {
+            // 点击圆点时不触发拖拽
+            if (e.target.closest('.dot')) return;
+            mapDragging = true;
+            container.classList.add('dragging');
+            container.classList.remove('smooth');
+            mapDragStartX = e.clientX;
+            mapDragStartY = e.clientY;
+            mapPanStartX = mapPanX;
+            mapPanStartY = mapPanY;
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!mapDragging) return;
+            mapPanX = mapPanStartX + (e.clientX - mapDragStartX);
+            mapPanY = mapPanStartY + (e.clientY - mapDragStartY);
+            clampPan();
+            applyMapTransform();
+        });
+        window.addEventListener('mouseup', () => {
+            if (!mapDragging) return;
+            mapDragging = false;
+            container.classList.remove('dragging');
+        });
+
+        // 滚轮缩放（推进推远）——以鼠标位置为缩放中心
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            // 鼠标相对视口中心的坐标
+            const mx = e.clientX - rect.left - rect.width / 2;
+            const my = e.clientY - rect.top - rect.height / 2;
+            const oldZoom = mapZoom;
+            const delta = e.deltaY > 0 ? -0.15 : 0.15;
+            let newZoom = Math.max(MAP_MIN_ZOOM, Math.min(MAP_MAX_ZOOM, oldZoom + delta * oldZoom));
+            if (newZoom === oldZoom) return;
+            // 保持鼠标所指位置不变：调整 pan 使该点在缩放后仍位于鼠标下
+            // 关系：newPan = mouse - (mouse - oldPan) * (newZoom / oldZoom)
+            mapPanX = mx - (mx - mapPanX) * (newZoom / oldZoom);
+            mapPanY = my - (my - mapPanY) * (newZoom / oldZoom);
+            mapZoom = newZoom;
+            clampPan();
+            container.classList.add('smooth');
+            applyMapTransform();
+            setTimeout(()=> container.classList.remove('smooth'), 360);
+        }, { passive:false });
+
+        // 双击重置到初始适配视图
+        container.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.dot')) return;
+            container.classList.add('smooth');
+            mapZoom = 1; mapPanX = 0; mapPanY = 0;
+            applyMapTransform();
+            setTimeout(()=> container.classList.remove('smooth'), 360);
         });
     }
 
@@ -2134,6 +3031,8 @@
                 switchToView('map');
             } else if (name === '罗盘') {
                 switchToView('compass');
+            } else if (name === '问灵') {
+                switchToView('oracle');
             } else {
                 showToast(name + ' · 敬请期待');
             }
@@ -2183,16 +3082,18 @@
         return t;
     }
 
-    /* ===== 视图切换：万象图 ⇄ 谱系 ⇄ 罗盘 ===== */
+    /* ===== 视图切换：万象图 ⇄ 谱系 ⇄ 罗盘 ⇄ 问灵 ===== */
     function switchToView(view){
         const map = document.querySelector('.map-container');
         const mapScroll = document.querySelector('#main-page > .scroll-container');
         const ped = document.getElementById('pedigreeView');
         const cmp = document.getElementById('compassView');
+        const orc = document.getElementById('oracleView');
         if (view === 'pedigree') {
             map.style.display = 'none';
             mapScroll.style.display = 'none';
             cmp.classList.remove('show');
+            orc.classList.remove('show');
             ped.classList.add('show');
             if (!pedigreeBuilt) { buildPedigree(); pedigreeBuilt = true; }
             else { fitPedigreeSvg(); }
@@ -2201,6 +3102,7 @@
             map.style.display = 'none';
             mapScroll.style.display = 'none';
             ped.classList.remove('show');
+            orc.classList.remove('show');
             cmp.classList.add('show');
             if (!compassBuilt) {
                 buildCompass();
@@ -2208,11 +3110,19 @@
                 bindCompassInteractions();
                 if (!compassRaf) compassTick();
             }
+        } else if (view === 'oracle') {
+            map.style.display = 'none';
+            mapScroll.style.display = 'none';
+            ped.classList.remove('show');
+            cmp.classList.remove('show');
+            orc.classList.add('show');
+            if (!oracleBuilt) { buildOracle(); oracleBuilt = true; }
         } else {
             map.style.display = '';
             mapScroll.style.display = '';
             ped.classList.remove('show');
             cmp.classList.remove('show');
+            orc.classList.remove('show');
         }
     }
 
@@ -2798,6 +3708,64 @@
         ]
     };
 
+    // —— 各温度带「母系家族描述」（温度带 = 母系血缘） ——
+    const compassMatrilineal = {
+        tropical: {
+            title: '热带族 · 母系之灵',
+            sub: 'MATRIARCH · TROPICAL',
+            body: '热带族是所有母系血脉中最早苏醒的那一支。她体温恒定如母亲的怀抱，没有四季，只有永恒的夏天。她生育了14个儿女——雨林、季风、草原、沙漠，都是她的孩子。她的性格极端而慷慨：要么倾盆，要么晴空万里。她从不犹豫，从不伪装。热带族的儿女们，身上都带着母亲那种"要么全有，要么全无"的底色——热烈、直接、坦诚。'
+        },
+        subtropical: {
+            title: '亚热带族 · 母系之灵',
+            sub: 'MATRIARCH · SUBTROPICAL',
+            body: '亚热带族是所有母系血脉中最善于等待的那一支。她不急——夏有烈日却不灼人，冬有寒意却不刺骨。她把性格藏在江南的梅雨里：细密、绵长、不急不缓。她的儿女是气候之灵中最懂"时令"的一群——他们知道雨何时来，暑何时退，季节的边界在哪里。亚热带族的儿女们，身上都带着母亲那种"知进退"的从容底色。'
+        },
+        temperate: {
+            title: '温带族 · 母系之灵',
+            sub: 'MATRIARCH · TEMPERATE',
+            body: '温带族是所有母系血脉中最懂得平衡的那一支。她拥有完整的四季——春生、夏长、秋收、冬藏。她的儿女分居在大陆西岸与东岸，隔着大陆相望，却共享同一套"四季的语言"。她教会儿女们一件最重要的事：在边界之间活着。不极端，不退缩，在冷暖交替中始终保持清醒。温带族的儿女们，身上都带着母亲那种"在摇摆中找到重心"的力量。'
+        },
+        cold: {
+            title: '寒带族 · 母系之灵',
+            sub: 'MATRIARCH · COLD',
+            body: '寒带族是所有母系血脉中最古老、最沉静的那一支。她的体温接近冰点——不是死亡，而是一种更慢的"活着"。她呼吸一次，需要一百年。她的儿女住在世界的尽头，一个在格陵兰的冰盖上，一个在北极圈的苔原边。她教会儿女们一件别处学不到的事：以千年为单位计量时间。寒带族的儿女们，身上都带着母亲那种"寂静的厚度"。'
+        },
+        alpine: {
+            title: '高山族 · 母系之灵',
+            sub: 'MATRIARCH · ALPINE',
+            body: '高山族是所有母系血脉中最特别的那一支。她不属于任何温度带——她站在所有温度带之上，像一座孤峰俯瞰大地。她的体温随海拔变化：山脚是热带，山腰是温带，山顶是寒带。她的儿女只有一人，却是亚洲所有大河的源头。她教会儿女们一件独一无二的事：站得越高，看得越远——而看得越远，就越懂得什么是孤独，什么是辽阔。'
+        }
+    };
+
+    // —— 各温度带「核心知识点」（地理硬核知识） ——
+    const compassKnowledge = {
+        tropical: {
+            title: '热带族 · 地理核心知识',
+            sub: 'GEOGRAPHY · TROPICAL',
+            body: '热带气候类型涵盖热带雨林、热带季风、热带草原、热带沙漠四种亚型，其根本成因均为终年受低纬大气环流控制。赤道附近受赤道低气压带控制，盛行上升气流，形成全年高温多雨的热带雨林气候；随着纬度增加，受信风带与副热带高压带交替影响，逐步过渡为干湿季交替的热带草原气候、旱雨季分明的热带季风气候，直至终年受副热带高压带或干燥信风控制的热带沙漠气候。热带气候区的共同特征是全年高温（年均温>20°C）、气温年较差极小，差异主要体现在降水模式上——从全年多雨到全年干旱，构成了热带区域最完整的水分梯度序列。'
+        },
+        subtropical: {
+            title: '亚热带族 · 地理核心知识',
+            sub: 'GEOGRAPHY · SUBTROPICAL',
+            body: '亚热带季风气候分布于南北纬25°-35°的大陆东岸，是全球季风环流最典型的区域之一。其成因为海陆热力性质差异——夏季陆地增温快形成低压，海洋高压向陆地输送暖湿气流；冬季陆地降温快形成高压，盛行来自高纬的干冷气流。降水季节分配不均，夏季多雨，冬季少雨。亚热带季风区的显著特征是"雨热同期"——高温期与多雨期重合，对农业生产极为有利。梅雨是东亚亚热带季风气候最独特的地理现象，由冷暖空气在长江中下游对峙形成的准静止锋带来持续降水。'
+        },
+        temperate: {
+            title: '温带族 · 地理核心知识',
+            sub: 'GEOGRAPHY · TEMPERATE',
+            body: '温带气候类型涵盖温带海洋性、温带大陆性和地中海气候三种亚型，其分布与大气环流和海陆位置密切相关。温带海洋性气候分布在大陆西岸（南北纬40°-60°），终年受西风带和暖流影响，全年温和湿润；温带大陆性气候分布在亚欧大陆和北美大陆内部，深居内陆、距海遥远，冬夏温差极大；地中海气候分布在南北纬30°-40°的大陆西岸，受副热带高压带（夏）与西风带（冬）交替控制，形成夏干冬雨、雨热不同期的独特格局。温带气候区是地球上四季最分明的区域。'
+        },
+        cold: {
+            title: '寒带族 · 地理核心知识',
+            sub: 'GEOGRAPHY · COLD',
+            body: '寒带气候分布于极地圈以内（南北纬65°以上），包括冰原气候和苔原气候两种亚型。冰原气候终年被永久冰盖覆盖，全年均温<0°C，最热月均温也不超过0°C；苔原气候冬季漫长严寒，夏季短暂凉爽（最热月均温约0-10°C），有永久冻土层，仅夏季表层解冻。寒带气候的成因是纬度高、太阳辐射弱，加之极地高气压带控制，冷空气堆积形成"冷极"。极昼与极夜交替是寒带气候最独特的地理现象——冬季连续数月的黑夜与夏季连续数月的白昼交替出现，深刻影响着区域的气候与生态系统。'
+        },
+        alpine: {
+            title: '高山族 · 地理核心知识',
+            sub: 'GEOGRAPHY · ALPINE',
+            body: '高原山地气候是垂直地带性气候的典型代表——气温和降水随海拔变化而发生规律性改变，海拔每升高1000m，气温约下降6°C。中低纬度的高原山地由于海拔高、空气稀薄、太阳辐射强、气温低、降水差异大，形成了从山麓到山顶的完整垂直气候带谱。青藏高原是世界上面积最大、海拔最高的高原，平均海拔超过4000m，被称为"地球第三极"和"亚洲水塔"，是长江、黄河、澜沧江等亚洲大河的源头。高海拔带来的强烈辐射和巨大昼夜温差，使高山气候成为全球气候系统中最为独立的单元。'
+        }
+    };
+
     // 各温度层同心圆半径（从内到外）；层间距约 65px
     const COMPASS_RADII = [110, 175, 240, 305];
 
@@ -2903,12 +3871,34 @@
         const chs = layer.members.map(n => findCharByName(n)).filter(Boolean);
         document.getElementById('compassPanelMembers').innerHTML = chs.map(c => `<div>· ${c.name} <span style="color:#8a98a8;">${c.title||''}</span></div>`).join('');
         document.getElementById('compassPanel').classList.add('show');
+
+        // 左上：母系家族描述
+        const mat = compassMatrilineal[layer.id];
+        if (mat){
+            document.getElementById('compassMatrilinealTitle').textContent = mat.title;
+            document.getElementById('compassMatrilinealSub').textContent = mat.sub;
+            document.getElementById('compassMatrilinealBody').textContent = mat.body;
+            document.getElementById('compassMatrilinealPanel').classList.add('show');
+        }
+        // 左下：核心知识点
+        const kn = compassKnowledge[layer.id];
+        if (kn){
+            document.getElementById('compassKnowledgeTitle').textContent = kn.title;
+            document.getElementById('compassKnowledgeSub').textContent = kn.sub;
+            document.getElementById('compassKnowledgeBody').textContent = kn.body;
+            document.getElementById('compassKnowledgePanel').classList.add('show');
+        }
+
         document.querySelectorAll('.compass-layer-tag').forEach(t => t.classList.toggle('active', t.dataset.layer === layer.id));
     }
     function closeCompassPanel(){
         panelOpenLayer = null;
         const p = document.getElementById('compassPanel');
         if (p) p.classList.remove('show');
+        const mp = document.getElementById('compassMatrilinealPanel');
+        if (mp) mp.classList.remove('show');
+        const kp = document.getElementById('compassKnowledgePanel');
+        if (kp) kp.classList.remove('show');
         document.querySelectorAll('.compass-layer-tag').forEach(t => t.classList.remove('active'));
     }
 
@@ -3327,6 +4317,397 @@
         // 信息面板关闭按钮
         const closeBtn = document.getElementById('compassPanelClose');
         if (closeBtn) closeBtn.addEventListener('click', ()=>{ closeCompassPanel(); unfocusAllLayers(); resetCompassScroll(); });
+        // 左侧副面板关闭按钮（仅关闭对应副面板）
+        const matClose = document.getElementById('compassMatrilinealClose');
+        if (matClose) matClose.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            document.getElementById('compassMatrilinealPanel').classList.remove('show');
+        });
+        const knClose = document.getElementById('compassKnowledgeClose');
+        if (knClose) knClose.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            document.getElementById('compassKnowledgePanel').classList.remove('show');
+        });
+    }
+
+    /* ============================================================
+       问灵页面：CLIMATERIA · 视觉小说模式
+       立绘叠放 + 说话者高亮 + 打字机 + 幕次导航 + 自动播放
+       注：立绘已抠白底透明 + 压缩为 WebP，背景图同。
+    ============================================================ */
+    let oracleBuilt = false;          // 是否已构建（懒构建）
+    let oracleChapter = 0;            // 当前篇章索引
+    let oracleLine = 0;               // 当前幕次（对话行）索引
+    let oracleAuto = false;           // 自动播放
+    let oracleAutoTimer = null;       // 自动播放计时器
+    let oracleTyping = false;         // 是否正在打字
+    let oracleTypingTimer = null;     // 打字计时器
+    let oracleSkipTyping = false;     // 跳过打字（点击时）
+
+    // —— 自创简笔画神秘图标（SVG path，不用现成 emoji） ——
+    // 1=雨林嫩芽 2=海浪 3=日月相半 4=山巅 5=雪花 6=酒杯 7=双波
+    const tocGlyphs = {
+        1: '<path d="M12 21c0-7 0-12 0-12 M12 9c-3 0-5-2-5-5 M12 9c3 0 5-2 5-5 M12 13c-2 0-3-1-3-3 M12 13c2 0 3-1 3-3"/>',
+        2: '<path d="M3 12c2 2 3 2 5 0s3-2 5 0 3 2 5 0 M3 17c2 2 3 2 5 0s3-2 5 0 3 2 5 0 M3 7c2 2 3 2 5 0s3-2 5 0 3 2 5 0"/>',
+        3: '<path d="M12 4a8 8 0 0 0 0 16 M12 4a8 8 0 0 1 0 16" fill="currentColor" stroke="none"/><path d="M12 4a8 8 0 0 0 0 16" />',
+        4: '<path d="M3 19l5-8 4 5 4-7 5 10z"/><path d="M8 11l1-2 M16 9l1 2"/>',
+        5: '<path d="M12 4v16 M4 8l16 8 M4 16l16-8 M12 8l3-2 M12 8l-3-2 M12 16l3 2 M12 16l-3 2"/>',
+        6: '<path d="M7 4h10l-1 7a4 4 0 0 1-8 0z M12 15v5 M9 20h6"/>',
+        7: '<path d="M3 10c2 2 3 2 5 0s3-2 5 0 3 2 5 0 M3 18c2 2 3 2 5 0s3-2 5 0 3 2 5 0 M5 6c1 1 1.5 1 2.5 0s1.5-1 2.5 0 M14 6c1 1 1.5 1 2.5 0s1.5-1 2.5 0"/>'
+    };
+
+    // —— 篇章数据（第一篇完整，其余占位锁定） ——
+    const oracleChapters = [
+        {
+            id: 'warm-cold',
+            actNum: '第一幕',
+            actEn: 'ACT I',
+            title: '冷暖的约定',
+            enTitle: 'The Pact of Warmth and Cold',
+            glyph: 1,
+            bg: 'bg_pacific_meet.webp',
+            characters: [
+                { id: 'elnino', name: '厄尔尼诺', sprite: '立绘elnino.webp', glow: 'warm', pos: { x: 30 } },
+                { id: 'lanina', name: '拉尼娜', sprite: '立绘lanina.webp', glow: 'cool', pos: { x: 70 } }
+            ],
+            dialogues: [
+                { speaker: 'elnino', expr: 'passionate', text: '我来了。比上次迟了三个月。信风松了，洋流改了方向。你感觉到了吗？' },
+                { speaker: 'lanina', expr: 'calm', text: '我早就知道你会来。每次海面变暖的时候，我就开始准备起身。' },
+                { speaker: 'elnino', expr: 'calm', text: '那你呢？什么时候走？' },
+                { speaker: 'lanina', expr: 'calm', text: '等你走完。你把秩序搅乱了，我把它收回来。每次都是一样的。' },
+                { speaker: 'elnino', expr: 'contemplation', text: '我走后，你会重新把信风吹紧，把冷水拉回海面。你把一切都复原，像没发生过一样。' },
+                { speaker: 'lanina', expr: 'calm', text: '不是复原，是交给下一次。' },
+                { speaker: 'elnino', expr: 'contemplation', text: '那我呢？' },
+                { speaker: 'lanina', expr: 'sad', text: '你？' },
+                { speaker: 'elnino', expr: 'passionate', text: '你把我放在哪里？在信风里？在洋流里？还是在你每一次复原之后，彻底忘掉的东西里？' },
+                { speaker: 'lanina', expr: 'contemplation', text: '我从来没有把你忘记。你是我每一次变冷的起点。没有你，我不知道为什么要变冷。' },
+                { speaker: 'elnino', expr: 'sad', text: '我每次来，都在想你还在不在。' },
+                { speaker: 'lanina', expr: 'calm', text: '我在。一直都在。' },
+                { speaker: 'elnino', expr: 'passionate', text: '那我下次来的时候，你还会在吗？' },
+                { speaker: 'lanina', expr: 'calm', text: '下次信风转向的时候，你还会浮起来。而我，永远在你的对面——等你来，等你走，等你下次再来。' },
+                { speaker: 'elnino', expr: 'smile', text: '那约好了。我来了，你就亮起来。你亮着，我就知道太平洋还活着。' },
+                { speaker: 'narrator', expr: 'calm', text: '厄尔尼诺向东退去，拉尼娜向西沉入深海。信风重新吹起，冷暖无声地交替。' }
+            ]
+        },
+        { id: 'wind-sea', actNum: '第二幕', actEn: 'ACT II', title: '风与海的约定', enTitle: 'The Pact of Wind and Sea', glyph: 2, locked: true },
+        { id: 'blood-oath', actNum: '第三幕', actEn: 'ACT III', title: '血脉的盟约', enTitle: 'The Blood Oath', glyph: 3, locked: true },
+        { id: 'nomad', actNum: '第四幕', actEn: 'ACT IV', title: '游牧与守望', enTitle: 'Nomad and Watch', glyph: 4, locked: true },
+        { id: 'mirror', actNum: '第五幕', actEn: 'ACT V', title: '对立与镜像', enTitle: 'Opposition and Mirror', glyph: 5, locked: true },
+        { id: 'lonely', actNum: '第六幕', actEn: 'ACT VI', title: '孤独者的回声', enTitle: 'Echo of the Lonely', glyph: 6, locked: true },
+        { id: 'pacific-lover', actNum: '第七幕', actEn: 'ACT VII', title: '太平洋的恋人', enTitle: 'Lover of the Pacific', glyph: 7, locked: true }
+    ];
+
+    /* ===== 构建问灵页面 ===== */
+    function buildOracle(){
+        buildOracleToc();
+        loadOracleChapter(0);
+        bindOracleControls();
+    }
+
+    /* ===== 构建侧边目录（幕次栏） ===== */
+    function buildOracleToc(){
+        const inner = document.getElementById('oracleTocInner');
+        let html = '<div class="oracle-toc-title">幕 次</div>';
+        html += '<div class="oracle-toc-subtitle">TABLE OF CONTENTS</div>';
+        html += '<div class="oracle-toc-divider"></div>';
+        oracleChapters.forEach((ch, i) => {
+            const cls = 'oracle-toc-item' + (i === oracleChapter ? ' active' : '') + (ch.locked ? ' locked' : '');
+            html += '<div class="' + cls + '" data-idx="' + i + '"' + (ch.locked ? '' : ' data-clickable="1"') + '>';
+            html += '<svg class="toc-glyph" viewBox="0 0 24 24">' + (tocGlyphs[ch.glyph] || '') + '</svg>';
+            html += '<div class="toc-text">';
+            html += '<span class="toc-num">' + ch.actNum + '</span>';
+            html += '<span class="toc-name">' + ch.title + '</span>';
+            html += '<span class="toc-name-en">' + ch.enTitle + '</span>';
+            html += '</div>';
+            html += '</div>';
+        });
+        inner.innerHTML = html;
+        // 绑定点击
+        inner.querySelectorAll('.oracle-toc-item').forEach(item => {
+            item.addEventListener('click', ()=>{
+                if (item.dataset.clickable !== '1') {
+                    showToast('该篇章尚未开启 · 敬请期待');
+                    return;
+                }
+                const idx = parseInt(item.dataset.idx, 10);
+                loadOracleChapter(idx);
+                closeOracleToc();
+            });
+        });
+    }
+
+    /* ===== 更新目录高亮 ===== */
+    function updateOracleTocActive(){
+        document.querySelectorAll('#oracleTocInner .oracle-toc-item').forEach(item => {
+            const idx = parseInt(item.dataset.idx, 10);
+            item.classList.toggle('active', idx === oracleChapter);
+        });
+    }
+
+    /* ===== 目录开关 ===== */
+    function openOracleToc(){
+        document.getElementById('oracleTocPanel').classList.add('show');
+        document.getElementById('oracleTocMask').classList.add('show');
+    }
+    function closeOracleToc(){
+        document.getElementById('oracleTocPanel').classList.remove('show');
+        document.getElementById('oracleTocMask').classList.remove('show');
+    }
+    function toggleOracleToc(){
+        const p = document.getElementById('oracleTocPanel');
+        if (p.classList.contains('show')) closeOracleToc();
+        else openOracleToc();
+    }
+
+    /* ===== 加载篇章 ===== */
+    function loadOracleChapter(idx){
+        const ch = oracleChapters[idx];
+        if (!ch || ch.locked) {
+            showToast('该篇章尚未开启 · 敬请期待');
+            return;
+        }
+        oracleChapter = idx;
+        oracleLine = 0;
+        oracleAuto = false;
+        updateAutoBtn();
+
+        // 顶部标题（中英双语 + 幕次编号）
+        document.getElementById('oracleTitle').innerHTML =
+            '<span class="ov-num">' + ch.actEn + '</span>' +
+            '<span class="ov-cn">' + ch.title + '</span>' +
+            '<span class="ov-en">' + ch.enTitle + '</span>';
+
+        // 背景
+        const bg = document.getElementById('oracleBg');
+        bg.style.backgroundImage = "url('" + ch.bg + "')";
+
+        // 立绘
+        const spritesEl = document.getElementById('oracleSprites');
+        spritesEl.innerHTML = '';
+        ch.characters.forEach(c => {
+            const sp = document.createElement('div');
+            sp.className = 'oracle-sprite glow-' + c.glow;
+            sp.dataset.charId = c.id;
+            sp.style.left = c.pos.x + '%';
+            sp.innerHTML = '<img src="' + c.sprite + '" alt="' + c.name + '" loading="eager">';
+            sp.title = c.name;
+            spritesEl.appendChild(sp);
+        });
+
+        // 目录高亮
+        updateOracleTocActive();
+        // 渲染第一幕
+        renderOracleLine();
+    }
+
+    /* ===== 渲染当前幕 ===== */
+    function renderOracleLine(){
+        const ch = oracleChapters[oracleChapter];
+        const d = ch.dialogues[oracleLine];
+        if (!d) return;
+
+        // 更新立绘状态
+        updateOracleSprites(d.speaker, d.expr);
+
+        // 说话者名字
+        const speakerEl = document.getElementById('oracleSpeaker');
+        const textEl = document.getElementById('oracleText');
+        if (d.speaker === 'narrator') {
+            speakerEl.textContent = '— 旁白 —';
+            speakerEl.className = 'oracle-speaker narrator';
+        } else {
+            const c = ch.characters.find(c => c.id === d.speaker);
+            speakerEl.textContent = c ? c.name : d.speaker;
+            speakerEl.className = 'oracle-speaker ' + (c ? c.glow : '');
+        }
+
+        // 进度
+        document.getElementById('oracleProgress').textContent =
+            (oracleLine + 1) + ' / ' + ch.dialogues.length;
+
+        // 按钮状态
+        document.getElementById('oraclePrev').disabled = (oracleLine === 0);
+        document.getElementById('oracleNext').disabled = (oracleLine === ch.dialogues.length - 1);
+
+        // 打字机效果
+        oracleTyping = true;
+        oracleSkipTyping = false;
+        typeOracleText(d.text, textEl);
+    }
+
+    /* ===== 更新立绘高亮/暗沉 ===== */
+    function updateOracleSprites(speakerId, expr){
+        const ch = oracleChapters[oracleChapter];
+        const sprites = document.querySelectorAll('#oracleSprites .oracle-sprite');
+        sprites.forEach(sp => {
+            const isSpeaking = (sp.dataset.charId === speakerId);
+            sp.classList.remove('dim', 'speaking', 'expr-calm', 'expr-smile', 'expr-contemplation', 'expr-passionate', 'expr-sad', 'expr-surprised');
+            sp.classList.add('expr-' + (expr || 'calm'));
+            if (isSpeaking) {
+                sp.classList.add('speaking');
+            } else if (speakerId !== 'narrator') {
+                sp.classList.add('dim');
+            } else {
+                // 旁白时所有角色轻微暗沉
+                sp.classList.add('dim');
+            }
+        });
+    }
+
+    /* ===== 打字机效果 ===== */
+    function typeOracleText(text, el){
+        clearTimeout(oracleTypingTimer);
+        el.innerHTML = '';
+        el.classList.remove('listen-mode');
+        const chars = Array.from(text);
+        const frag = document.createDocumentFragment();
+        const charEls = [];
+        chars.forEach(ch => {
+            const span = document.createElement('span');
+            span.className = 'char';
+            span.textContent = ch;
+            frag.appendChild(span);
+            charEls.push(span);
+        });
+        el.appendChild(frag);
+
+        let i = 0;
+        function step(){
+            if (oracleSkipTyping) {
+                charEls.forEach(s => s.classList.add('show'));
+                oracleTyping = false;
+                onOracleLineDone();
+                return;
+            }
+            if (i < charEls.length) {
+                charEls[i].classList.add('show');
+                i++;
+                const c = chars[i-1];
+                const delay = (c === '。' || c === '！' || c === '？' || c === '，' || c === '——') ? 120 : 45;
+                oracleTypingTimer = setTimeout(step, delay);
+            } else {
+                oracleTyping = false;
+                onOracleLineDone();
+            }
+        }
+        step();
+    }
+
+    /* ===== 一幕结束（触发自动播放） ===== */
+    function onOracleLineDone(){
+        if (oracleAuto) {
+            const ch = oracleChapters[oracleChapter];
+            const isLast = (oracleLine === ch.dialogues.length - 1);
+            const delay = isLast ? 4000 : 2200;
+            clearTimeout(oracleAutoTimer);
+            oracleAutoTimer = setTimeout(()=>{
+                if (oracleAuto) oracleNext();
+            }, delay);
+        }
+    }
+
+    /* ===== 下一幕 ===== */
+    function oracleNext(){
+        const ch = oracleChapters[oracleChapter];
+        if (oracleLine < ch.dialogues.length - 1) {
+            oracleLine++;
+            renderOracleLine();
+        } else {
+            // 篇章结束
+            oracleAuto = false;
+            updateAutoBtn();
+            showToast('本篇已终 · ' + ch.title);
+        }
+    }
+
+    /* ===== 上一页 ===== */
+    function oraclePrev(){
+        if (oracleLine > 0) {
+            oracleLine--;
+            renderOracleLine();
+        }
+    }
+
+    /* ===== 自动播放按钮 ===== */
+    function updateAutoBtn(){
+        const btn = document.getElementById('oracleAuto');
+        if (oracleAuto) {
+            btn.textContent = '停止播放';
+            btn.classList.add('auto-on');
+        } else {
+            btn.textContent = '自动播放';
+            btn.classList.remove('auto-on');
+            clearTimeout(oracleAutoTimer);
+        }
+    }
+
+    /* ===== 绑定控件 ===== */
+    function bindOracleControls(){
+        document.getElementById('oraclePrev').addEventListener('click', ()=>{
+            if (oracleTyping) { oracleSkipTyping = true; return; }
+            oraclePrev();
+        });
+        document.getElementById('oracleNext').addEventListener('click', ()=>{
+            if (oracleTyping) { oracleSkipTyping = true; return; }
+            oracleNext();
+        });
+        document.getElementById('oracleAuto').addEventListener('click', ()=>{
+            oracleAuto = !oracleAuto;
+            updateAutoBtn();
+            if (oracleAuto) {
+                if (oracleTyping) { oracleSkipTyping = true; }
+                else { onOracleLineDone(); }
+            }
+        });
+        // 侧边目录按钮
+        document.getElementById('oracleTocBtn').addEventListener('click', (e)=>{
+            e.stopPropagation();
+            toggleOracleToc();
+        });
+        // 点击遮罩关闭目录
+        document.getElementById('oracleTocMask').addEventListener('click', closeOracleToc);
+        // 点击舞台/对话框：跳过打字 或 下一页（避开目录、立绘、按钮）
+        const stage = document.getElementById('oracleStage');
+        const dlg = document.querySelector('.oracle-dialogue');
+        [stage, dlg].forEach(el => {
+            el.addEventListener('click', (e)=>{
+                if (e.target.closest('.oracle-sprite')) return; // 立绘点击单独处理
+                if (e.target.closest('.oracle-toc-btn') || e.target.closest('.oracle-toc-panel') || e.target.closest('.oracle-toc-mask')) return;
+                if (oracleTyping) { oracleSkipTyping = true; }
+                else { oracleNext(); }
+            });
+        });
+
+        // 键盘 ← → 翻页
+        document.addEventListener('keydown', (e)=>{
+            const orc = document.getElementById('oracleView');
+            if (!orc.classList.contains('show')) return;
+            if (e.key === 'ArrowRight') {
+                if (oracleTyping) { oracleSkipTyping = true; return; }
+                oracleNext();
+            } else if (e.key === 'ArrowLeft') {
+                if (oracleTyping) { oracleSkipTyping = true; return; }
+                oraclePrev();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                oracleAuto = !oracleAuto;
+                updateAutoBtn();
+                if (oracleAuto) {
+                    if (oracleTyping) { oracleSkipTyping = true; }
+                    else { onOracleLineDone(); }
+                }
+            }
+        });
+
+        // 立绘点击：弹出对应人物详情（若存在于 characters 全局数据）
+        const spritesEl = document.getElementById('oracleSprites');
+        spritesEl.addEventListener('click', (e)=>{
+            const sp = e.target.closest('.oracle-sprite');
+            if (!sp) return;
+            const charId = sp.dataset.charId;
+            // 厄尔尼诺/拉尼娜不在 27 角色库中，给提示
+            showToast('气候之灵 · ' + (sp.title || charId) + '\n（角色卡待补）');
+        });
     }
     </script>
 </body>
